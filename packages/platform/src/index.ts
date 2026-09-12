@@ -18,6 +18,7 @@ export * from "./scenarios/compiler.js";
 export * from "./suites/registry.js";
 export * from "./policy/engine.js";
 export * from "./workflow/foundation.js";
+export * from "./runs/service.js";
 export * from "./auth/sessions.js";
 export * from "./database/migrations.js";
 export * from "./database/postgres.js";
