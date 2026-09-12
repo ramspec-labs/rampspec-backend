@@ -54,6 +54,22 @@
         "schema": {
           "$ref": "#/components/schemas/ProjectId"
         }
+      },
+      "TargetPathId": {
+        "in": "path",
+        "name": "targetId",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/TargetId"
+        }
+      },
+      "CorridorPathId": {
+        "in": "path",
+        "name": "corridorId",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/CorridorId"
+        }
       }
     },
     "responses": {
@@ -300,6 +316,203 @@
           }
         },
         "type": "object"
+      },
+      "AssetId": {
+        "pattern": "^asset_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "Corridor": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "$ref": "#/components/schemas/UtcTimestamp"
+          },
+          "direction": {
+            "enum": [
+              "deposit",
+              "withdrawal",
+              "send",
+              "receive"
+            ],
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "$ref": "#/components/schemas/CorridorId"
+          },
+          "inputAssetId": {
+            "$ref": "#/components/schemas/AssetId"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "methods": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 64,
+            "minItems": 1,
+            "type": "array"
+          },
+          "organizationId": {
+            "$ref": "#/components/schemas/OrganizationId"
+          },
+          "outputAssetId": {
+            "$ref": "#/components/schemas/AssetId"
+          },
+          "targetId": {
+            "$ref": "#/components/schemas/TargetId"
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "targetId",
+          "inputAssetId",
+          "outputAssetId",
+          "direction",
+          "methods",
+          "enabled",
+          "metadata",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "CorridorId": {
+        "pattern": "^corridor_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "Target": {
+        "additionalProperties": false,
+        "properties": {
+          "archivedAt": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UtcTimestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/UtcTimestamp"
+          },
+          "customNetworkId": {
+            "oneOf": [
+              {
+                "minLength": 3,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expectedMethods": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 64,
+            "type": "array"
+          },
+          "expectedSeps": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 128,
+            "type": "array"
+          },
+          "id": {
+            "$ref": "#/components/schemas/TargetId"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "networkPassphrase": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "normalizedOrigin": {
+            "format": "uri",
+            "pattern": "^https://",
+            "type": "string"
+          },
+          "organizationId": {
+            "$ref": "#/components/schemas/OrganizationId"
+          },
+          "projectId": {
+            "$ref": "#/components/schemas/ProjectId"
+          },
+          "runnerPolicy": {
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "pending_verification",
+              "verified",
+              "suspended",
+              "archived"
+            ],
+            "type": "string"
+          },
+          "stellarNetwork": {
+            "enum": [
+              "testnet",
+              "pubnet",
+              "futurenet",
+              "custom"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/UtcTimestamp"
+          },
+          "verifiedUntil": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UtcTimestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "projectId",
+          "name",
+          "normalizedOrigin",
+          "stellarNetwork",
+          "networkPassphrase",
+          "customNetworkId",
+          "expectedSeps",
+          "expectedMethods",
+          "runnerPolicy",
+          "metadata",
+          "status",
+          "verifiedUntil",
+          "archivedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "TargetId": {
+        "pattern": "^target_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        "type": "string"
       },
       "PageInfo": {
         "additionalProperties": false,
@@ -1122,6 +1335,446 @@
           "Projects"
         ]
       }
+    },
+    "/v1/targets": {
+      "get": {
+        "operationId": "listTargets",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Target"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Tenant targets.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "summary": "List targets",
+        "tags": [
+          "Targets"
+        ]
+      },
+      "post": {
+        "operationId": "createTarget",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "customNetworkId": {
+                    "type": "string"
+                  },
+                  "expectedMethods": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "type": "array"
+                  },
+                  "expectedSeps": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 128,
+                    "type": "array"
+                  },
+                  "name": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "networkPassphrase": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "origin": {
+                    "format": "uri",
+                    "pattern": "^https://",
+                    "type": "string"
+                  },
+                  "organizationId": {
+                    "$ref": "#/components/schemas/OrganizationId"
+                  },
+                  "projectId": {
+                    "$ref": "#/components/schemas/ProjectId"
+                  },
+                  "stellarNetwork": {
+                    "enum": [
+                      "testnet",
+                      "pubnet",
+                      "futurenet",
+                      "custom"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "organizationId",
+                  "projectId",
+                  "name",
+                  "origin",
+                  "stellarNetwork",
+                  "networkPassphrase"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Target"
+                }
+              }
+            },
+            "description": "Target created.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "summary": "Create a target",
+        "tags": [
+          "Targets"
+        ]
+      }
+    },
+    "/v1/targets/{targetId}": {
+      "delete": {
+        "operationId": "archiveTarget",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/TargetPathId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Target archived.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "summary": "Archive a target",
+        "tags": [
+          "Targets"
+        ]
+      },
+      "get": {
+        "operationId": "getTarget",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/TargetPathId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Target"
+                }
+              }
+            },
+            "description": "Target details.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "summary": "Get a target",
+        "tags": [
+          "Targets"
+        ]
+      }
+    },
+    "/v1/targets/{targetId}/corridors": {
+      "get": {
+        "operationId": "listTargetCorridors",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/TargetPathId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Corridor"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Target corridors.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "summary": "List target corridors",
+        "tags": [
+          "Targets"
+        ]
+      },
+      "post": {
+        "operationId": "createTargetCorridor",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/TargetPathId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "direction": {
+                    "enum": [
+                      "deposit",
+                      "withdrawal",
+                      "send",
+                      "receive"
+                    ],
+                    "type": "string"
+                  },
+                  "inputAssetId": {
+                    "$ref": "#/components/schemas/AssetId"
+                  },
+                  "methods": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "outputAssetId": {
+                    "$ref": "#/components/schemas/AssetId"
+                  }
+                },
+                "required": [
+                  "inputAssetId",
+                  "outputAssetId",
+                  "direction",
+                  "methods"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Corridor"
+                }
+              }
+            },
+            "description": "Corridor created.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "summary": "Create a target corridor",
+        "tags": [
+          "Targets"
+        ]
+      }
+    },
+    "/v1/corridors/{corridorId}": {
+      "patch": {
+        "operationId": "setCorridorEnabled",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/CorridorPathId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "enabled"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Corridor"
+                }
+              }
+            },
+            "description": "Corridor updated.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "summary": "Enable or disable a corridor",
+        "tags": [
+          "Targets"
+        ]
+      }
     }
   },
   "security": [
@@ -1146,6 +1799,10 @@
     {
       "description": "Tenant project lifecycle and repository metadata.",
       "name": "Projects"
+    },
+    {
+      "description": "Verified endpoints, Stellar networks, assets, and corridors.",
+      "name": "Targets"
     }
   ]
 }
