@@ -287,6 +287,103 @@ describeDatabase("PostgreSQL migration integration", () => {
     ).rejects.toMatchObject({ code: "55000" });
   });
 
+  it("keeps run configuration, events, evidence, reports, and audits immutable", async () => {
+    const organizationId = "organization_00000000-0000-4000-8000-000000000012";
+    const projectId = "project_00000000-0000-4000-8000-000000000020";
+    const targetId = "target_00000000-0000-4000-8000-000000000021";
+    const suiteId = "suite_00000000-0000-4000-8000-000000000040";
+    const runId = "run_00000000-0000-4000-8000-000000000041";
+    await pool.query(
+      `INSERT INTO rampspec.suites (id, organization_id, slug, name)
+       VALUES ($1, $2, 'ci-suite', 'CI Suite')`,
+      [suiteId, organizationId],
+    );
+    await pool.query(
+      `INSERT INTO rampspec.suite_versions
+         (organization_id, suite_id, version, lock_hash, lock_document)
+       VALUES ($1, $2, '1.0.0', $3, '{}'::jsonb)`,
+      [organizationId, suiteId, "3".repeat(64)],
+    );
+    await pool.query(
+      `INSERT INTO rampspec.runs
+         (id, organization_id, project_id, target_id, suite_id, suite_version,
+          idempotency_key, effective_config, effective_config_hash, state)
+       VALUES ($1, $2, $3, $4, $5, '1.0.0', 'ci-idempotency-key-0001',
+               '{"network":"testnet"}'::jsonb, $6, 'requested')`,
+      [runId, organizationId, projectId, targetId, suiteId, "4".repeat(64)],
+    );
+    await pool.query(
+      `INSERT INTO rampspec.run_events
+         (id, organization_id, run_id, sequence, event_type)
+       VALUES ('event_00000000-0000-4000-8000-000000000042', $1, $2, 0, 'run.requested')`,
+      [organizationId, runId],
+    );
+    await expect(
+      pool.query(
+        "UPDATE rampspec.run_events SET event_type = 'run.changed' WHERE run_id = $1",
+        [runId],
+      ),
+    ).rejects.toMatchObject({ code: "55000" });
+    await expect(
+      pool.query(
+        "UPDATE rampspec.runs SET effective_config = '{}' WHERE id = $1",
+        [runId],
+      ),
+    ).rejects.toMatchObject({ code: "55000" });
+
+    await pool.query(
+      `INSERT INTO rampspec.artifacts
+         (id, organization_id, run_id, classification, media_type, object_key,
+          content_hash, byte_length, redaction_version, status, expires_at, finalized_at)
+       VALUES ('artifact_00000000-0000-4000-8000-000000000043', $1, $2,
+               'internal', 'application/json', 'ci/artifact.json', $3, 2,
+               '1.0.0', 'finalized', now() + interval '1 day', now())`,
+      [organizationId, runId, "5".repeat(64)],
+    );
+    await expect(
+      pool.query(
+        "UPDATE rampspec.artifacts SET content_hash = $1 WHERE run_id = $2",
+        ["6".repeat(64), runId],
+      ),
+    ).rejects.toMatchObject({ code: "55000" });
+
+    const reportId = "report_00000000-0000-4000-8000-000000000044";
+    await pool.query(
+      `INSERT INTO rampspec.reports
+         (id, organization_id, run_id, schema_version, report_hash,
+          evidence_manifest_hash, content, status, finalized_at)
+       VALUES ($1, $2, $3, '1.0.0', $4, $5, '{}'::jsonb, 'finalized', now())`,
+      [reportId, organizationId, runId, "7".repeat(64), "8".repeat(64)],
+    );
+    await expect(
+      pool.query(
+        "UPDATE rampspec.reports SET content = '{\"changed\":true}' WHERE id = $1",
+        [reportId],
+      ),
+    ).rejects.toMatchObject({ code: "55000" });
+    await expect(
+      pool.query(
+        "UPDATE rampspec.reports SET status = 'signed' WHERE id = $1",
+        [reportId],
+      ),
+    ).resolves.toMatchObject({ rowCount: 1 });
+
+    await pool.query(
+      `INSERT INTO rampspec.audit_events
+         (id, organization_id, actor_type, actor_id, action, target_type,
+          target_id, request_id, metadata_hash)
+       VALUES ('audit_event_00000000-0000-4000-8000-000000000045', $1,
+               'system', 'migration-test', 'run.created', 'run', $2,
+               'request_00000000-0000-4000-8000-000000000046', $3)`,
+      [organizationId, runId, "9".repeat(64)],
+    );
+    await expect(
+      pool.query("DELETE FROM rampspec.audit_events WHERE target_id = $1", [
+        runId,
+      ]),
+    ).rejects.toMatchObject({ code: "55000" });
+  });
+
   it("applies development seeds idempotently and rejects production seeding", async () => {
     const seeds = await loadSeeds(resolve("seeds", "development"));
     await expect(runner.seed(seeds, "development")).resolves.toBe(seeds.length);
