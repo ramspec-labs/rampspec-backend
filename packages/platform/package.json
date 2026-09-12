@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@rampspec/domain": "workspace:*",
+    "jose": "6.2.12",
     "pg": "8.23.0",
     "zod": "4.6.2"
   },

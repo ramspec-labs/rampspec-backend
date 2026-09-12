@@ -25,6 +25,7 @@ export const entityKinds = [
   "schedule",
   "secret_reference",
   "service_account",
+  "session",
   "spec_snapshot",
   "suite",
   "target",
