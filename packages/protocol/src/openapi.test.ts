@@ -47,7 +47,9 @@ describe("OpenAPI contract", () => {
         if (path === "/health") continue;
         expect(openApiDocument.security).toContainEqual({ bearerAuth: [] });
         const parameters = JSON.stringify(operation.parameters);
-        expect(parameters).toContain("#/components/parameters/OrganizationId");
+        const tenantless = path === "/v1/organizations";
+        if (!tenantless)
+          expect(parameters).toContain("#/components/parameters/OrganizationId");
         for (const [status, response] of Object.entries(responses)) {
           if (Number(status) >= 400) {
             expect(
