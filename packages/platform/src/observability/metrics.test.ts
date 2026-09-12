@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { Metrics } from "./metrics.js";
+describe("metrics", () => { it("records counters and latency percentiles", () => { const metrics = new Metrics(); metrics.increment("runs.completed", { service: "api" }); metrics.increment("runs.completed", { service: "api" }); metrics.observe("run.latency", 10); metrics.observe("run.latency", 20); expect(metrics.counter("runs.completed")).toBe(2); expect(metrics.percentile("run.latency", 0.5)).toBe(20); }); it("rejects invalid observations and percentiles", () => { const metrics = new Metrics(); expect(() => metrics.observe("x", -1)).toThrow("observation"); expect(() => metrics.percentile("x", 2)).toThrow("percentile"); }); });
