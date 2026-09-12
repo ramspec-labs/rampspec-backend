@@ -1,0 +1,1 @@
+{"name":"@rampspec/cli","version":"0.0.0","private":true,"type":"module","bin":{"rampspec":"../../dist/apps/cli/src/index.js"}}

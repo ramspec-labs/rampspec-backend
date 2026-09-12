@@ -19,7 +19,14 @@ Cross-repository interfaces are consumed from tagged releases. Do not manually c
 
 ## Local development
 
-The pinned Node.js and pnpm workspace, application entry points, and quality commands are introduced in the next implementation unit. Until then, this commit contains governance and repository policy only.
+Install Node.js `24.21.0` and pnpm `12.4.1`, then run:
+
+```shell
+pnpm install --frozen-lockfile
+pnpm check
+```
+
+The workspace contains independently deployable applications under `apps/` and shared libraries under `packages/`. `pnpm verify:workspace` validates the expected package topology.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before contributing, [SECURITY.md](SECURITY.md) before reporting a vulnerability, and [governance/branch-and-release-policy.md](governance/branch-and-release-policy.md) before preparing a release.
 
