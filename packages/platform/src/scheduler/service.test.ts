@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { ScheduleService } from "./service.js";
+describe("recurring schedules", () => { it("creates deterministic enabled schedules and disables them", () => { const service = new ScheduleService({ clock: () => new Date("2026-09-12T18:00:00.000Z") }); const schedule = service.create("nightly_run", 3600); expect(schedule.nextRunAt).toBe("2026-09-12T19:00:00.000Z"); expect(service.disable(schedule.id).enabled).toBe(false); }); it("rejects unsafe intervals", () => { const service = new ScheduleService(); expect(() => service.create("x", 60)).toThrow("schedule"); expect(() => service.create("valid_schedule", 30)).toThrow("schedule"); }); });
