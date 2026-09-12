@@ -24,6 +24,7 @@ export * from "./runs/attempts.js";
 export * from "./targets/probe.js";
 export * from "./execution/request.js";
 export * from "./execution/response.js";
+export * from "./evidence/capture.js";
 export * from "./auth/sessions.js";
 export * from "./database/migrations.js";
 export * from "./database/postgres.js";
