@@ -84,6 +84,12 @@ export const openApiDocument = {
         required: true,
         schema: { $ref: "#/components/schemas/CorridorId" },
       },
+      VerificationPathId: {
+        in: "path",
+        name: "verificationId",
+        required: true,
+        schema: { $ref: "#/components/schemas/VerificationId" },
+      },
     },
     responses: {
       Problem: {
@@ -238,6 +244,26 @@ export const openApiDocument = {
       TargetId: {
         pattern: "^target_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
         type: "string",
+      },
+      VerificationId: {
+        pattern: "^verification_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        type: "string",
+      },
+      OwnershipChallenge: {
+        additionalProperties: false,
+        properties: {
+          createdAt: { $ref: "#/components/schemas/UtcTimestamp" },
+          evidenceHash: { oneOf: [{ pattern: "^[0-9a-f]{64}$", type: "string" }, { type: "null" }] },
+          expiresAt: { $ref: "#/components/schemas/UtcTimestamp" },
+          id: { $ref: "#/components/schemas/VerificationId" },
+          method: { enum: ["dns_txt", "well_known"], type: "string" },
+          organizationId: { $ref: "#/components/schemas/OrganizationId" },
+          status: { enum: ["pending", "verified", "expired", "revoked"], type: "string" },
+          targetId: { $ref: "#/components/schemas/TargetId" },
+          verifiedAt: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
+        },
+        required: ["id", "organizationId", "targetId", "method", "status", "evidenceHash", "expiresAt", "createdAt", "verifiedAt"],
+        type: "object",
       },
       PageInfo: {
         additionalProperties: false,
@@ -552,6 +578,40 @@ export const openApiDocument = {
         requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { enabled: { type: "boolean" } }, required: ["enabled"], type: "object" } } }, required: true },
         responses: { "200": jsonResponse("Corridor updated.", { $ref: "#/components/schemas/Corridor" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
         summary: "Enable or disable a corridor",
+        tags: ["Targets"],
+      },
+    },
+    "/v1/targets/{targetId}/ownership-challenges": {
+      get: {
+        operationId: "listOwnershipChallenges",
+        parameters: [...protectedOperationParameters, { $ref: "#/components/parameters/TargetPathId" }],
+        responses: { "200": jsonResponse("Ownership challenges.", { items: { $ref: "#/components/schemas/OwnershipChallenge" }, type: "array" }), "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        summary: "List ownership challenges",
+        tags: ["Targets"],
+      },
+      post: {
+        operationId: "createOwnershipChallenge",
+        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/TargetPathId" }],
+        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { method: { enum: ["dns_txt", "well_known"], type: "string" }, ttlSeconds: { maximum: 86400, minimum: 60, type: "integer" } }, required: ["method"], type: "object" } } }, required: true },
+        responses: { "201": jsonResponse("Ownership challenge created.", { additionalProperties: false, properties: { challenge: { $ref: "#/components/schemas/OwnershipChallenge" }, token: { minLength: 1, type: "string" } }, required: ["challenge", "token"], type: "object" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "409": { $ref: "#/components/responses/Problem" } },
+        summary: "Create an ownership challenge",
+        tags: ["Targets"],
+      },
+    },
+    "/v1/ownership-challenges/{verificationId}": {
+      delete: {
+        operationId: "revokeOwnershipChallenge",
+        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/VerificationPathId" }],
+        responses: { "204": { description: "Ownership challenge revoked.", headers: { "X-Request-Id": requestIdHeader } }, "401": { $ref: "#/components/responses/Problem" }, "403": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        summary: "Revoke an ownership challenge",
+        tags: ["Targets"],
+      },
+      post: {
+        operationId: "verifyOwnershipChallenge",
+        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/VerificationPathId" }],
+        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { evidence: { type: "string" }, token: { minLength: 1, type: "string" } }, required: ["token"], type: "object" } } }, required: true },
+        responses: { "200": jsonResponse("Ownership verified.", { $ref: "#/components/schemas/OwnershipChallenge" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "403": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        summary: "Verify an ownership challenge",
         tags: ["Targets"],
       },
     },

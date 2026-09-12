@@ -8,6 +8,7 @@ export * from "./audit/service.js";
 export * from "./api/organizations.js";
 export * from "./api/projects.js";
 export * from "./api/targets.js";
+export * from "./api/ownership.js";
 export * from "./auth/sessions.js";
 export * from "./database/migrations.js";
 export * from "./database/postgres.js";
