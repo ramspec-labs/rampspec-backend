@@ -1,0 +1,1 @@
+export function assertTenantAccess(requestOrganizationId: string, resourceOrganizationId: string): void { if (!requestOrganizationId || !resourceOrganizationId || requestOrganizationId !== resourceOrganizationId) throw new Error("Cross-tenant access denied."); }
