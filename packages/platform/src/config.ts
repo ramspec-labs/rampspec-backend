@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { knownNetworkPassphrases } from "../../domain/src/index.js";
+
 export const applicationNames = [
   "api",
   "browser",
@@ -13,12 +15,6 @@ export const applicationNames = [
 ] as const;
 
 export type ApplicationName = (typeof applicationNames)[number];
-
-const knownPassphrases = Object.freeze({
-  futurenet: "Test SDF Future Network ; October 2022",
-  pubnet: "Public Global Stellar Network ; September 2015",
-  testnet: "Test SDF Network ; September 2015",
-} as const);
 
 const secretReference = z
   .string()
@@ -229,7 +225,7 @@ function validateNetwork(config: RuntimeConfig): void {
       );
     }
     if (
-      Object.values(knownPassphrases).includes(
+      Object.values(knownNetworkPassphrases).includes(
         config.STELLAR_NETWORK_PASSPHRASE as never,
       )
     ) {
@@ -242,7 +238,7 @@ function validateNetwork(config: RuntimeConfig): void {
 
   if (
     config.STELLAR_NETWORK_PASSPHRASE !==
-    knownPassphrases[config.STELLAR_NETWORK]
+    knownNetworkPassphrases[config.STELLAR_NETWORK]
   ) {
     throw new Error(
       `Network passphrase does not match ${config.STELLAR_NETWORK}.`,
@@ -294,4 +290,4 @@ export function loadConfig(
   return Object.freeze(config);
 }
 
-export { knownPassphrases };
+export { knownNetworkPassphrases };

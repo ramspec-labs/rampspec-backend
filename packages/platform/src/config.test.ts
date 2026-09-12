@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { applicationNames, knownPassphrases, loadConfig } from "./config.js";
+import {
+  applicationNames,
+  knownNetworkPassphrases,
+  loadConfig,
+} from "./config.js";
 
 function validEnvironment(
   application: (typeof applicationNames)[number],
@@ -27,7 +31,7 @@ function validEnvironment(
     RUNNER_MODE: "local",
     STELLAR_HORIZON_URL: "https://horizon-testnet.stellar.org",
     STELLAR_NETWORK: "testnet",
-    STELLAR_NETWORK_PASSPHRASE: knownPassphrases.testnet,
+    STELLAR_NETWORK_PASSPHRASE: knownNetworkPassphrases.testnet,
     STELLAR_RPC_URL: "https://soroban-testnet.stellar.org",
     TEMPORAL_ADDRESS: "temporal.example.test:7233",
     TEMPORAL_NAMESPACE: "rampspec-test",

@@ -1,1 +1,10 @@
-{"name":"@rampspec/domain","version":"0.0.0","private":true,"type":"module"}
+{
+  "name": "@rampspec/domain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@stellar/stellar-sdk": "17.0.1",
+    "decimal.js": "10.6.0"
+  }
+}

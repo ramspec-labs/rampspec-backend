@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@rampspec/domain": "workspace:*",
     "zod": "4.6.2"
   }
 }
