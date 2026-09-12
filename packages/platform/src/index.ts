@@ -36,6 +36,7 @@ export * from "./secrets/providers.js";
 export * from "./observability/tracing.js";
 export * from "./observability/metrics.js";
 export * from "./operations/health.js";
+export * from "./operations/backup.js";
 export * from "./auth/sessions.js";
 export * from "./database/migrations.js";
 export * from "./database/postgres.js";

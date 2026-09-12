@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { createBackupManifest, validateRestore } from "./backup.js";
+describe("backup manifests", () => { it("creates and validates deterministic checksums", () => { const manifest = createBackupManifest(["runs/a", "evidence/b"], () => new Date("2026-09-12T18:00:00.000Z")); expect(manifest.objectKeys).toEqual(["evidence/b", "runs/a"]); expect(() => validateRestore(manifest)).not.toThrow(); }); it("rejects tampered manifests", () => { const manifest = createBackupManifest(["runs/a"]); expect(() => validateRestore({ ...manifest, objectKeys: ["runs/b"] })).toThrow("checksum"); }); });
