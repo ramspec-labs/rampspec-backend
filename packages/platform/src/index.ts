@@ -13,6 +13,7 @@ export * from "./api/secrets.js";
 export * from "./specs/importer.js";
 export * from "./specs/diff.js";
 export * from "./rules/registry.js";
+export * from "./rules/assertions.js";
 export * from "./auth/sessions.js";
 export * from "./database/migrations.js";
 export * from "./database/postgres.js";
