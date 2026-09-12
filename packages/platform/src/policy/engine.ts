@@ -1,0 +1,4 @@
+export interface ExecutionPolicy { readonly allowPubnet: boolean; readonly allowMutations: boolean; readonly requireSecretReferences: boolean; }
+export interface PolicyRequest { readonly network: "custom" | "futurenet" | "pubnet" | "testnet"; readonly mutatesState: boolean; readonly requiresSecrets: boolean; readonly secretReferencesAvailable: boolean; }
+export interface PolicyDecision { readonly allowed: boolean; readonly reasons: readonly string[]; }
+export function evaluateExecutionPolicy(policy: ExecutionPolicy, request: PolicyRequest): PolicyDecision { const reasons: string[] = []; if (request.network === "pubnet" && !policy.allowPubnet) reasons.push("pubnet_disabled"); if (request.mutatesState && !policy.allowMutations) reasons.push("mutations_disabled"); if (request.requiresSecrets && policy.requireSecretReferences && !request.secretReferencesAvailable) reasons.push("secret_reference_missing"); return { allowed: reasons.length === 0, reasons }; }
