@@ -15,7 +15,10 @@ const expectedPackages = ["domain", "platform", "protocol", "testing"];
 
 async function readName(kind, name) {
   const manifest = JSON.parse(
-    await readFile(new URL(`../${kind}/${name}/package.json`, import.meta.url), "utf8"),
+    await readFile(
+      new URL(`../${kind}/${name}/package.json`, import.meta.url),
+      "utf8",
+    ),
   );
   return manifest.name;
 }

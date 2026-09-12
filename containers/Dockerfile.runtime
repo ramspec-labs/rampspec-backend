@@ -1,0 +1,21 @@
+FROM node:24.21.0-bookworm-slim AS build
+
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+WORKDIR /workspace
+
+RUN corepack enable && corepack prepare pnpm@12.4.1 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json tsconfig.build.json ./
+COPY apps ./apps
+COPY packages ./packages
+COPY scripts ./scripts
+RUN pnpm install --frozen-lockfile
+RUN pnpm build
+
+FROM node:24.21.0-bookworm-slim AS runtime
+
+ENV NODE_ENV=production
+WORKDIR /app
+COPY --from=build --chown=node:node /workspace/dist ./dist
+USER node
+CMD ["node", "dist/apps/api/src/index.js"]

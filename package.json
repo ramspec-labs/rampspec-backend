@@ -13,9 +13,12 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts/verify-build.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "generate": "node scripts/generate.mjs",
     "lint": "eslint .",
+    "release:manifest": "node scripts/create-release-manifest.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "verify:generated": "node scripts/verify-generated.mjs",
     "verify:workspace": "node scripts/verify-workspace.mjs"
   },
   "devDependencies": {
