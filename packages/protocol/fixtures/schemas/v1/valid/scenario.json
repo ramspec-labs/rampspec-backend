@@ -2,6 +2,12 @@
   "id": "scenario.sep-1.discovery",
   "parameters": {},
   "schemaVersion": "1.0.0",
+  "safety": {
+    "allowPubnet": false,
+    "mutatesState": false,
+    "requiresSecrets": false,
+    "timeoutSeconds": 60
+  },
   "sep": "SEP-0001",
   "steps": [
     {

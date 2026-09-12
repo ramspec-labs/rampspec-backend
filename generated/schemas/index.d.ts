@@ -47,6 +47,12 @@ export interface RampSpecScenario {
   readonly extensions?: Readonly<Record<string, unknown>>;
   readonly id: string;
   readonly parameters: Readonly<Record<string, unknown>>;
+  readonly safety: {
+    readonly allowPubnet: boolean;
+    readonly mutatesState: boolean;
+    readonly requiresSecrets: boolean;
+    readonly timeoutSeconds: number;
+  };
   readonly schemaVersion: "1.0.0";
   readonly sep: string;
   readonly steps: readonly {

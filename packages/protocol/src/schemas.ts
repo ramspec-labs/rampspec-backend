@@ -76,6 +76,17 @@ export const scenarioSchema = {
     extensions,
     id: { minLength: 3, pattern: "^scenario\\.[a-z0-9.-]+$", type: "string" },
     parameters: { additionalProperties: true, type: "object" },
+    safety: {
+      additionalProperties: false,
+      properties: {
+        allowPubnet: { type: "boolean" },
+        mutatesState: { type: "boolean" },
+        requiresSecrets: { type: "boolean" },
+        timeoutSeconds: { maximum: 3600, minimum: 1, type: "integer" },
+      },
+      required: ["allowPubnet", "mutatesState", "requiresSecrets", "timeoutSeconds"],
+      type: "object",
+    },
     schemaVersion: schemaBase.schemaVersion,
     sep: { pattern: "^SEP-[0-9]{4}$", type: "string" },
     steps: {
@@ -93,7 +104,7 @@ export const scenarioSchema = {
     },
     version: { pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$", type: "string" },
   },
-  required: ["schemaVersion", "id", "version", "sep", "parameters", "steps"],
+  required: ["schemaVersion", "id", "version", "sep", "parameters", "steps", "safety"],
   title: "RampSpec Scenario",
   type: "object",
 } as const;

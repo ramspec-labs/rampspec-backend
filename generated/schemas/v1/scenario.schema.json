@@ -20,6 +20,32 @@
       "additionalProperties": true,
       "type": "object"
     },
+    "safety": {
+      "additionalProperties": false,
+      "properties": {
+        "allowPubnet": {
+          "type": "boolean"
+        },
+        "mutatesState": {
+          "type": "boolean"
+        },
+        "requiresSecrets": {
+          "type": "boolean"
+        },
+        "timeoutSeconds": {
+          "maximum": 3600,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "allowPubnet",
+        "mutatesState",
+        "requiresSecrets",
+        "timeoutSeconds"
+      ],
+      "type": "object"
+    },
     "schemaVersion": {
       "const": "1.0.0",
       "description": "Version of this individual contract.",
@@ -62,7 +88,8 @@
     "version",
     "sep",
     "parameters",
-    "steps"
+    "steps",
+    "safety"
   ],
   "title": "RampSpec Scenario",
   "type": "object"
