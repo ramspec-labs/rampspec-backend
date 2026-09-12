@@ -1,0 +1,4 @@
+import type { RunState } from "./service.js";
+const transitions: Readonly<Record<RunState, readonly RunState[]>> = { requested: ["policy_check", "cancelled"], policy_check: ["queued", "blocked", "failed", "cancelled"], queued: ["provisioning", "cancelled", "expired"], provisioning: ["running", "failed", "cancelled"], running: ["waiting_external", "finalizing", "failed", "cancelled"], waiting_external: ["running", "expired", "failed", "cancelled"], finalizing: ["completed", "failed"], completed: [], failed: [], blocked: [], cancelled: [], expired: [] };
+export function canTransition(from: RunState, to: RunState): boolean { return transitions[from].includes(to); }
+export function transitionRun(from: RunState, to: RunState): RunState { if (!canTransition(from, to)) throw new Error(`Invalid run transition: ${from} -> ${to}.`); return to; }

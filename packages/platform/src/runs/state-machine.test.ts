@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { transitionRun } from "./state-machine.js";
+describe("run state machine", () => { it("allows the documented execution path", () => { let state = transitionRun("requested", "policy_check"); state = transitionRun(state, "queued"); state = transitionRun(state, "provisioning"); state = transitionRun(state, "running"); state = transitionRun(state, "finalizing"); expect(transitionRun(state, "completed")).toBe("completed"); }); it("rejects skips and terminal mutations", () => { expect(() => transitionRun("requested", "running")).toThrow("Invalid"); expect(() => transitionRun("completed", "failed")).toThrow("Invalid"); }); });
