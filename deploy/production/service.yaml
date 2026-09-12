@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rampspec-api
+spec:
+  selector:
+    app: rampspec-api
+  ports:
+    - port: 80
+      targetPort: 3000

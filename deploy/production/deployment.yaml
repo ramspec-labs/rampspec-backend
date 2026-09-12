@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rampspec-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rampspec-api
+  template:
+    metadata:
+      labels:
+        app: rampspec-api
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: ghcr.io/rampspec-labs/rampspec-backend@sha256:REPLACE_WITH_RELEASE_DIGEST
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: rampspec-api-runtime
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3000
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
