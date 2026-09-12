@@ -160,6 +160,78 @@ describeDatabase("PostgreSQL migration integration", () => {
     ).rejects.toMatchObject({ code: "23503" });
   });
 
+  it("enforces project, target, network, asset, and cross-tenant constraints", async () => {
+    const organizationId = "organization_00000000-0000-4000-8000-000000000012";
+    const otherOrganizationId =
+      "organization_00000000-0000-4000-8000-000000000013";
+    const projectId = "project_00000000-0000-4000-8000-000000000020";
+    const targetId = "target_00000000-0000-4000-8000-000000000021";
+    await pool.query(
+      `INSERT INTO rampspec.projects (id, organization_id, slug, name)
+       VALUES ($1, $2, 'anchor-api', 'Anchor API')`,
+      [projectId, organizationId],
+    );
+    await pool.query(
+      `INSERT INTO rampspec.targets
+         (id, organization_id, project_id, name, normalized_origin,
+          stellar_network, network_passphrase)
+       VALUES ($1, $2, $3, 'Test Anchor', 'https://anchor.example.test',
+               'testnet', 'Test SDF Network ; September 2015')`,
+      [targetId, organizationId, projectId],
+    );
+
+    await expect(
+      pool.query(
+        `INSERT INTO rampspec.targets
+           (id, organization_id, project_id, name, normalized_origin,
+            stellar_network, network_passphrase)
+         VALUES ('target_00000000-0000-4000-8000-000000000022', $1, $2,
+                 'Duplicate', 'https://anchor.example.test',
+                 'testnet', 'Test SDF Network ; September 2015')`,
+        [organizationId, projectId],
+      ),
+    ).rejects.toMatchObject({ code: "23505" });
+    await expect(
+      pool.query(
+        `INSERT INTO rampspec.targets
+           (id, organization_id, project_id, name, normalized_origin,
+            stellar_network, network_passphrase)
+         VALUES ('target_00000000-0000-4000-8000-000000000023', $1, $2,
+                 'Wrong Network', 'https://wrong-network.example.test',
+                 'pubnet', 'Test SDF Network ; September 2015')`,
+        [organizationId, projectId],
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query(
+        `INSERT INTO rampspec.targets
+           (id, organization_id, project_id, name, normalized_origin,
+            stellar_network, network_passphrase)
+         VALUES ('target_00000000-0000-4000-8000-000000000024', $1, $2,
+                 'Cross Tenant', 'https://cross-tenant.example.test',
+                 'testnet', 'Test SDF Network ; September 2015')`,
+        [otherOrganizationId, projectId],
+      ),
+    ).rejects.toMatchObject({ code: "23503" });
+
+    await pool.query(
+      `INSERT INTO rampspec.assets
+         (id, organization_id, target_id, canonical_asset_id, asset_type)
+       VALUES ('asset_00000000-0000-4000-8000-000000000025', $1, $2,
+               'native', 'native')`,
+      [organizationId, targetId],
+    );
+    await expect(
+      pool.query(
+        `INSERT INTO rampspec.assets
+           (id, organization_id, target_id, canonical_asset_id, asset_type, code)
+         VALUES ('asset_00000000-0000-4000-8000-000000000026', $1, $2,
+                 'invalid-native', 'native', 'XLM')`,
+        [organizationId, targetId],
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+  });
+
   it("applies development seeds idempotently and rejects production seeding", async () => {
     const seeds = await loadSeeds(resolve("seeds", "development"));
     await expect(runner.seed(seeds, "development")).resolves.toBe(seeds.length);

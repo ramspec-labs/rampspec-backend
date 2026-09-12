@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 export const entityKinds = [
   "api_key",
+  "asset",
   "artifact",
   "attempt",
   "challenge",
@@ -13,10 +14,12 @@ export const entityKinds = [
   "report",
   "run",
   "scenario",
+  "secret_reference",
   "service_account",
   "suite",
   "target",
   "user",
+  "verification",
 ] as const;
 
 export type EntityKind = (typeof entityKinds)[number];
