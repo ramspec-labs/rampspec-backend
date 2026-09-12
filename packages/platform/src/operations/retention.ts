@@ -1,0 +1,2 @@
+export interface RetentionArtifact { readonly id: string; readonly expiresAt: string; readonly status: "deleted" | "finalized" | "pending"; }
+export function planPurge(artifacts: readonly RetentionArtifact[], now: Date = new Date()): readonly string[] { return artifacts.filter((artifact) => artifact.status !== "deleted" && Date.parse(artifact.expiresAt) <= now.getTime()).map((artifact) => artifact.id); }
