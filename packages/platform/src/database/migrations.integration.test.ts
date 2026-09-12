@@ -232,6 +232,61 @@ describeDatabase("PostgreSQL migration integration", () => {
     ).rejects.toMatchObject({ code: "23514" });
   });
 
+  it("keeps imported snapshots and published rule packs immutable", async () => {
+    const organizationId = "organization_00000000-0000-4000-8000-000000000012";
+    const snapshotId = "spec_snapshot_00000000-0000-4000-8000-000000000030";
+    const rulePackId = "rule_pack_00000000-0000-4000-8000-000000000031";
+    await pool.query(
+      `INSERT INTO rampspec.spec_snapshots
+         (id, organization_id, source_repository, source_commit, sep_id,
+          content_hash, content, upstream_status)
+       VALUES ($1, $2, 'https://github.com/stellar/stellar-protocol', $3,
+               'SEP-0001', $4, '{"title":"SEP-1"}'::jsonb, 'final')`,
+      [snapshotId, organizationId, "d".repeat(40), "e".repeat(64)],
+    );
+    await expect(
+      pool.query(
+        "UPDATE rampspec.spec_snapshots SET content = '{}' WHERE id = $1",
+        [snapshotId],
+      ),
+    ).rejects.toMatchObject({ code: "55000" });
+    await expect(
+      pool.query(
+        `INSERT INTO rampspec.spec_snapshots
+           (id, organization_id, source_repository, source_commit, sep_id,
+            content_hash, content, upstream_status)
+         VALUES ('spec_snapshot_00000000-0000-4000-8000-000000000032', $1,
+                 'https://github.com/stellar/stellar-protocol', $2,
+                 'SEP-0002', $3, '{}'::jsonb, 'draft')`,
+        [organizationId, "f".repeat(40), "e".repeat(64)],
+      ),
+    ).rejects.toMatchObject({ code: "23505" });
+
+    await pool.query(
+      `INSERT INTO rampspec.rule_packs (id, organization_id, slug, name)
+       VALUES ($1, $2, 'stellar-core', 'Stellar Core Rules')`,
+      [rulePackId, organizationId],
+    );
+    await pool.query(
+      `INSERT INTO rampspec.rule_pack_versions
+         (organization_id, rule_pack_id, version, manifest_hash, signature,
+          signer_key_id, minimum_backend_version, status, published_at)
+       VALUES ($1, $2, '1.0.0', $3, decode(repeat('ab', 64), 'hex'),
+               'release-key-1', '0.1.0', 'published', now())`,
+      [organizationId, rulePackId, "1".repeat(64)],
+    );
+    await expect(
+      pool.query(
+        `INSERT INTO rampspec.rules
+           (id, organization_id, rule_pack_id, rule_pack_version, stable_key,
+            spec_snapshot_id, classification, severity, implementation_hash, definition)
+         VALUES ('rule_00000000-0000-4000-8000-000000000033', $1, $2, '1.0.0',
+                 'sep-1.toml-https', $3, 'normative', 'error', $4, '{}'::jsonb)`,
+        [organizationId, rulePackId, snapshotId, "2".repeat(64)],
+      ),
+    ).rejects.toMatchObject({ code: "55000" });
+  });
+
   it("applies development seeds idempotently and rejects production seeding", async () => {
     const seeds = await loadSeeds(resolve("seeds", "development"));
     await expect(runner.seed(seeds, "development")).resolves.toBe(seeds.length);
