@@ -10,6 +10,7 @@ export * from "./api/projects.js";
 export * from "./api/targets.js";
 export * from "./api/ownership.js";
 export * from "./api/secrets.js";
+export * from "./specs/importer.js";
 export * from "./auth/sessions.js";
 export * from "./database/migrations.js";
 export * from "./database/postgres.js";
