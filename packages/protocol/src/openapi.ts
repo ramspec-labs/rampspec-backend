@@ -66,6 +66,12 @@ export const openApiDocument = {
         required: true,
         schema: { $ref: "#/components/schemas/OrganizationId" },
       },
+      ProjectPathId: {
+        in: "path",
+        name: "projectId",
+        required: true,
+        schema: { $ref: "#/components/schemas/ProjectId" },
+      },
     },
     responses: {
       Problem: {
@@ -132,6 +138,38 @@ export const openApiDocument = {
         properties: {
           name: { maxLength: 200, minLength: 1, type: "string" },
           policy: { $ref: "#/components/schemas/OrganizationPolicy" },
+          slug: { pattern: "^[a-z][a-z0-9-]{2,62}$", type: "string" },
+        },
+        type: "object",
+      },
+      Project: {
+        additionalProperties: false,
+        properties: {
+          archivedAt: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
+          createdAt: { $ref: "#/components/schemas/UtcTimestamp" },
+          id: { $ref: "#/components/schemas/ProjectId" },
+          name: { maxLength: 200, minLength: 1, type: "string" },
+          organizationId: { $ref: "#/components/schemas/OrganizationId" },
+          policy: { type: "object" },
+          repositoryUrl: { oneOf: [{ format: "uri", pattern: "^https://", type: "string" }, { type: "null" }] },
+          slug: { pattern: "^[a-z][a-z0-9-]{2,62}$", type: "string" },
+          status: { enum: ["active", "archived"], type: "string" },
+          updatedAt: { $ref: "#/components/schemas/UtcTimestamp" },
+        },
+        required: ["id", "organizationId", "slug", "name", "repositoryUrl", "policy", "status", "archivedAt", "createdAt", "updatedAt"],
+        type: "object",
+      },
+      ProjectId: {
+        pattern: "^project_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        type: "string",
+      },
+      ProjectUpdate: {
+        additionalProperties: false,
+        minProperties: 1,
+        properties: {
+          name: { maxLength: 200, minLength: 1, type: "string" },
+          policy: { type: "object" },
+          repositoryUrl: { oneOf: [{ format: "uri", pattern: "^https://", type: "string" }, { type: "null" }] },
           slug: { pattern: "^[a-z][a-z0-9-]{2,62}$", type: "string" },
         },
         type: "object",
@@ -343,6 +381,55 @@ export const openApiDocument = {
         tags: ["Organizations"],
       },
     },
+    "/v1/projects": {
+      get: {
+        operationId: "listProjects",
+        parameters: [...protectedOperationParameters, { $ref: "#/components/parameters/Cursor" }],
+        responses: {
+          "200": jsonResponse("A page of projects.", { additionalProperties: false, properties: { items: { items: { $ref: "#/components/schemas/Project" }, type: "array" }, nextCursor: { oneOf: [{ $ref: "#/components/schemas/OpaqueCursor" }, { type: "null" }] } }, required: ["items", "nextCursor"], type: "object" }),
+          "401": { $ref: "#/components/responses/Problem" },
+        },
+        summary: "List projects",
+        tags: ["Projects"],
+      },
+      post: {
+        operationId: "createProject",
+        parameters: mutationOperationParameters,
+        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { name: { maxLength: 200, minLength: 1, type: "string" }, organizationId: { $ref: "#/components/schemas/OrganizationId" }, policy: { type: "object" }, repositoryUrl: { oneOf: [{ format: "uri", pattern: "^https://", type: "string" }, { type: "null" }] }, slug: { pattern: "^[a-z][a-z0-9-]{2,62}$", type: "string" } }, required: ["name", "organizationId", "slug"], type: "object" } } }, required: true },
+        responses: {
+          "201": jsonResponse("Project created.", { $ref: "#/components/schemas/Project" }),
+          "400": { $ref: "#/components/responses/Problem" },
+          "401": { $ref: "#/components/responses/Problem" },
+          "409": { $ref: "#/components/responses/Problem" },
+        },
+        summary: "Create a project",
+        tags: ["Projects"],
+      },
+    },
+    "/v1/projects/{projectId}": {
+      delete: {
+        operationId: "archiveProject",
+        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/ProjectPathId" }],
+        responses: { "204": { description: "Project archived.", headers: { "X-Request-Id": requestIdHeader } }, "401": { $ref: "#/components/responses/Problem" }, "403": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        summary: "Archive a project",
+        tags: ["Projects"],
+      },
+      get: {
+        operationId: "getProject",
+        parameters: [...protectedOperationParameters, { $ref: "#/components/parameters/ProjectPathId" }],
+        responses: { "200": jsonResponse("Project details.", { $ref: "#/components/schemas/Project" }), "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        summary: "Get a project",
+        tags: ["Projects"],
+      },
+      patch: {
+        operationId: "updateProject",
+        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/ProjectPathId" }],
+        requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/ProjectUpdate" } } }, required: true },
+        responses: { "200": jsonResponse("Project updated.", { $ref: "#/components/schemas/Project" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "403": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        summary: "Update a project",
+        tags: ["Projects"],
+      },
+    },
   },
   security: [{ bearerAuth: [] }],
   servers: [{ url: "https://api.rampspec.dev" }],
@@ -354,6 +441,10 @@ export const openApiDocument = {
     {
       description: "Tenant organizations and membership lifecycle.",
       name: "Organizations",
+    },
+    {
+      description: "Tenant project lifecycle and repository metadata.",
+      name: "Projects",
     },
   ],
 } as const;
