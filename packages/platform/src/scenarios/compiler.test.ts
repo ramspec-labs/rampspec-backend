@@ -1,0 +1,4 @@
+import { describe, expect, it } from "vitest";
+import { compileScenario } from "./compiler.js";
+const base = { id: "scenario.sep-1.discovery", version: "1.0.0", sep: "SEP-0001", parameters: {}, safety: { allowPubnet: false, mutatesState: false, requiresSecrets: true, timeoutSeconds: 60 }, steps: [{ id: "fetch-toml", adapter: "http.get" }] } as const;
+describe("scenario compiler", () => { it("emits deterministic executable steps", () => { expect(compileScenario(base)).toEqual({ id: base.id, requiresSecrets: true, timeoutSeconds: 60, steps: [{ adapter: "http.get", id: "fetch-toml", ordinal: 0 }] }); }); it("rejects unsafe policy and malformed steps", () => { expect(() => compileScenario({ ...base, safety: { ...base.safety, allowPubnet: true, mutatesState: true } })).toThrow("pubnet"); expect(() => compileScenario({ ...base, steps: [{ id: "same", adapter: "http.get" }, { id: "same", adapter: "http.get" }] })).toThrow("duplicate"); }); });
