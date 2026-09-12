@@ -5,6 +5,10 @@
   "type": "module",
   "dependencies": {
     "@rampspec/domain": "workspace:*",
+    "pg": "8.23.0",
     "zod": "4.6.2"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1"
   }
 }
