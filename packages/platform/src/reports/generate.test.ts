@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { generateReport } from "./generate.js";
+describe("report generation", () => { it("aggregates findings and binds evidence manifest", () => { const report = generateReport({ runId: "run_00000000-0000-4000-8000-000000000001", evidenceManifestHash: "a".repeat(64), findings: [{ id: "finding_1", status: "pass" }, { id: "finding_2", status: "fail" }, { id: "finding_3", status: "warning" }, { id: "finding_4", status: "skipped" }] }); expect(report.summary).toEqual({ failed: 1, passed: 1, skipped: 1, warnings: 1 }); }); it("rejects malformed manifests", () => { expect(() => generateReport({ runId: "run_1", evidenceManifestHash: "bad", findings: [] })).toThrow("hash"); }); });
