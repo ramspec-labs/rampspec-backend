@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { liveness, readiness } from "./health.js";
+describe("operational health", () => { it("reports liveness and aggregate readiness", async () => { expect(liveness()).toEqual({ status: "ok" }); await expect(readiness([{ name: "database", check: () => Promise.resolve(true) }, { name: "temporal", check: () => Promise.resolve(true) }])).resolves.toEqual({ status: "ready", checks: { database: true, temporal: true } }); }); it("fails readiness closed when a dependency errors", async () => { await expect(readiness([{ name: "database", check: () => Promise.reject(new Error("down")) }])).resolves.toMatchObject({ status: "not_ready", checks: { database: false } }); }); });
