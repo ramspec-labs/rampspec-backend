@@ -1,0 +1,86 @@
+{
+  "$id": "https://schemas.rampspec.dev/backend/v1/rule.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "assertion": {
+      "minLength": 3,
+      "pattern": "^[a-z][a-z0-9.-]+$",
+      "type": "string"
+    },
+    "classification": {
+      "enum": [
+        "normative",
+        "recommended",
+        "informational",
+        "draft"
+      ],
+      "type": "string"
+    },
+    "extensions": {
+      "additionalProperties": true,
+      "description": "Namespaced forward-compatible extension values.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*\\.[a-z][a-z0-9.-]*$"
+      },
+      "type": "object"
+    },
+    "id": {
+      "minLength": 3,
+      "pattern": "^[a-z][a-z0-9.-]+$",
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "1.0.0",
+      "description": "Version of this individual contract.",
+      "type": "string"
+    },
+    "sep": {
+      "pattern": "^SEP-[0-9]{4}$",
+      "type": "string"
+    },
+    "severity": {
+      "enum": [
+        "info",
+        "warning",
+        "error",
+        "critical"
+      ],
+      "type": "string"
+    },
+    "source": {
+      "additionalProperties": false,
+      "properties": {
+        "commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "line": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "uri": {
+          "format": "uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri",
+        "commit",
+        "line"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "sep",
+    "classification",
+    "severity",
+    "source",
+    "assertion"
+  ],
+  "title": "RampSpec Rule",
+  "type": "object"
+}

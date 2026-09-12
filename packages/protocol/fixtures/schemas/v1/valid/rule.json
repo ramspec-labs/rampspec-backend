@@ -1,0 +1,13 @@
+{
+  "assertion": "toml.https",
+  "classification": "normative",
+  "id": "sep-1.toml-https",
+  "schemaVersion": "1.0.0",
+  "sep": "SEP-0001",
+  "severity": "error",
+  "source": {
+    "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "line": 42,
+    "uri": "https://github.com/stellar/stellar-protocol"
+  }
+}

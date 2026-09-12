@@ -1,0 +1,8 @@
+{
+  "assertion": "toml.https",
+  "classification": "mandatory",
+  "id": "sep-1.toml-https",
+  "schemaVersion": "1.0.0",
+  "sep": "SEP-1",
+  "severity": "error"
+}

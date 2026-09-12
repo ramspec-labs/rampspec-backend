@@ -1,0 +1,12 @@
+{
+  "lockHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "rulePacks": {
+    "stellar-seps": "1.0.0"
+  },
+  "scenarios": {
+    "scenario.sep-1.discovery": "1.0.0"
+  },
+  "schemaVersion": "1.0.0",
+  "suiteId": "suite_00000000-0000-4000-8000-000000000001",
+  "suiteVersion": "1.0.0"
+}

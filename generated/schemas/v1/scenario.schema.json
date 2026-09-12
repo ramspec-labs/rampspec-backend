@@ -1,0 +1,69 @@
+{
+  "$id": "https://schemas.rampspec.dev/backend/v1/scenario.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "extensions": {
+      "additionalProperties": true,
+      "description": "Namespaced forward-compatible extension values.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*\\.[a-z][a-z0-9.-]*$"
+      },
+      "type": "object"
+    },
+    "id": {
+      "minLength": 3,
+      "pattern": "^scenario\\.[a-z0-9.-]+$",
+      "type": "string"
+    },
+    "parameters": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "schemaVersion": {
+      "const": "1.0.0",
+      "description": "Version of this individual contract.",
+      "type": "string"
+    },
+    "sep": {
+      "pattern": "^SEP-[0-9]{4}$",
+      "type": "string"
+    },
+    "steps": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "adapter": {
+            "pattern": "^[a-z][a-z0-9.-]+$",
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9-]+$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "adapter"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "version": {
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "version",
+    "sep",
+    "parameters",
+    "steps"
+  ],
+  "title": "RampSpec Scenario",
+  "type": "object"
+}

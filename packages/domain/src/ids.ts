@@ -6,6 +6,7 @@ export const entityKinds = [
   "attempt",
   "challenge",
   "corridor",
+  "event",
   "finding",
   "organization",
   "project",

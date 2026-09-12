@@ -1,0 +1,13 @@
+{
+  "id": "scenario.sep-1.discovery",
+  "parameters": {},
+  "schemaVersion": "1.0.0",
+  "sep": "SEP-0001",
+  "steps": [
+    {
+      "adapter": "http.get",
+      "id": "fetch-toml"
+    }
+  ],
+  "version": "1.0.0"
+}

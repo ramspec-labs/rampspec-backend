@@ -1,0 +1,8 @@
+{
+  "id": "scenario.sep-1.discovery",
+  "parameters": {},
+  "schemaVersion": "1.0.0",
+  "sep": "SEP-0001",
+  "steps": [],
+  "version": "latest"
+}

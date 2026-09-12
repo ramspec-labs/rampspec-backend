@@ -1,0 +1,58 @@
+{
+  "$id": "https://schemas.rampspec.dev/backend/v1/suite-lock.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "extensions": {
+      "additionalProperties": true,
+      "description": "Namespaced forward-compatible extension values.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*\\.[a-z][a-z0-9.-]*$"
+      },
+      "type": "object"
+    },
+    "lockHash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "rulePacks": {
+      "additionalProperties": {
+        "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+        "type": "string"
+      },
+      "minProperties": 1,
+      "type": "object"
+    },
+    "scenarios": {
+      "additionalProperties": {
+        "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+        "type": "string"
+      },
+      "minProperties": 1,
+      "type": "object"
+    },
+    "schemaVersion": {
+      "const": "1.0.0",
+      "description": "Version of this individual contract.",
+      "type": "string"
+    },
+    "suiteId": {
+      "pattern": "^suite_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "type": "string"
+    },
+    "suiteVersion": {
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "suiteId",
+    "suiteVersion",
+    "rulePacks",
+    "scenarios",
+    "lockHash"
+  ],
+  "title": "RampSpec Suite Lock",
+  "type": "object"
+}

@@ -1,0 +1,12 @@
+{
+  "evidenceManifestHash": "short",
+  "findingIds": ["finding_123", "finding_123"],
+  "generatedAt": "yesterday",
+  "reportId": "report_123",
+  "runId": "run_123",
+  "schemaVersion": "2.0.0",
+  "summary": {
+    "failed": -1,
+    "passed": 8
+  }
+}

@@ -11,8 +11,10 @@ describe("release manifest", () => {
     const root = await mkdtemp(join(tmpdir(), "rampspec-release-"));
     try {
       await mkdir(join(root, "dist", "z"), { recursive: true });
+      await mkdir(join(root, "generated"), { recursive: true });
       await writeFile(join(root, "dist", "z", "output.js"), "export {};\n");
       await writeFile(join(root, "dist", "a.js"), "export const a = 1;\n");
+      await writeFile(join(root, "generated", "contract.json"), "{}\n");
 
       const manifest = await createReleaseManifest({
         containerDigest: `sha256:${"b".repeat(64)}`,
@@ -24,6 +26,7 @@ describe("release manifest", () => {
       expect(manifest.artifacts.map(({ path }) => path)).toEqual([
         "dist/a.js",
         "dist/z/output.js",
+        "generated/contract.json",
       ]);
       expect(manifest.container.digest).toHaveLength(71);
       expect(manifest.sourceCommit).toBe("a".repeat(40));

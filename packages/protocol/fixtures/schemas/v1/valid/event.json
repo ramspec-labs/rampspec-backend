@@ -1,0 +1,11 @@
+{
+  "eventId": "event_00000000-0000-4000-8000-000000000002",
+  "occurredAt": "2026-09-12T18:03:04.005Z",
+  "payload": {
+    "state": "queued"
+  },
+  "runId": "run_00000000-0000-4000-8000-000000000003",
+  "schemaVersion": "1.0.0",
+  "sequence": 0,
+  "type": "run.queued"
+}

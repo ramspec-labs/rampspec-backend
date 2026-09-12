@@ -1,0 +1,14 @@
+{
+  "evidenceManifestHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "findingIds": ["finding_00000000-0000-4000-8000-000000000004"],
+  "generatedAt": "2026-09-12T18:03:04.005Z",
+  "reportId": "report_00000000-0000-4000-8000-000000000005",
+  "runId": "run_00000000-0000-4000-8000-000000000003",
+  "schemaVersion": "1.0.0",
+  "summary": {
+    "failed": 1,
+    "passed": 8,
+    "skipped": 2,
+    "warnings": 1
+  }
+}

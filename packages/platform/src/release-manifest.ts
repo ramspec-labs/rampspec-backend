@@ -53,9 +53,17 @@ export async function createReleaseManifest(
     throw new Error("A container image and sha256 digest are required.");
   }
 
-  const buildDirectory = resolve(root, "dist");
+  const artifactPaths = (
+    await Promise.all(
+      ["dist", "generated"].map((directory) =>
+        filesUnder(resolve(root, directory)),
+      ),
+    )
+  ).flat();
   const artifacts = await Promise.all(
-    (await filesUnder(buildDirectory)).map((path) => digest(path, root)),
+    artifactPaths
+      .sort((left, right) => left.localeCompare(right, "en"))
+      .map((path) => digest(path, root)),
   );
 
   return {
