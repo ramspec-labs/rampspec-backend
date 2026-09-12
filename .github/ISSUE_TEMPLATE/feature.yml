@@ -1,0 +1,33 @@
+name: Backend change
+description: Propose a focused backend capability or protocol behavior change.
+title: "proposal: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: State the user or operator outcome without prescribing unrelated changes.
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Protocol or architecture source
+      description: Link the pinned SEP, schema, decision, or release that defines the behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance checks
+      description: List independently verifiable success and failure cases.
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Security, privacy, and compatibility impact
+    validations:
+      required: true
