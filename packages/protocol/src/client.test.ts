@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { mapApiError, nextCursor } from "./client.js";
+describe("API client helpers", () => { it("maps problem documents and validates opaque cursors", async () => { await expect(mapApiError(new Response('{"type":"x","title":"Bad","status":400}', { status: 400 }))).resolves.toMatchObject({ status: 400 }); expect(nextCursor("a".repeat(16))).toBe("a".repeat(16)); expect(nextCursor(null)).toBeNull(); }); it("rejects malformed cursors and fallback errors safely", async () => { expect(() => nextCursor("bad=")).toThrow("cursor"); await expect(mapApiError(new Response("nope", { status: 500, statusText: "Oops" }))).resolves.toMatchObject({ status: 500, title: "Oops" }); }); });
