@@ -78,6 +78,14 @@
         "schema": {
           "$ref": "#/components/schemas/VerificationId"
         }
+      },
+      "SecretReferencePathId": {
+        "in": "path",
+        "name": "secretReferenceId",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/SecretReferenceId"
+        }
       }
     },
     "responses": {
@@ -592,6 +600,99 @@
           "expiresAt",
           "createdAt",
           "verifiedAt"
+        ],
+        "type": "object"
+      },
+      "SecretReferenceId": {
+        "pattern": "^secret_reference_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "SecretReference": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "$ref": "#/components/schemas/UtcTimestamp"
+          },
+          "deletedAt": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UtcTimestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "$ref": "#/components/schemas/SecretReferenceId"
+          },
+          "lastUsedAt": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UtcTimestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "locatorHash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "name": {
+            "pattern": "^[a-z][a-z0-9_-]{2,63}$",
+            "type": "string"
+          },
+          "organizationId": {
+            "$ref": "#/components/schemas/OrganizationId"
+          },
+          "provider": {
+            "enum": [
+              "aws",
+              "azure",
+              "gcp",
+              "vault",
+              "local"
+            ],
+            "type": "string"
+          },
+          "providerVersion": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rotatedAt": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UtcTimestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "targetId": {
+            "$ref": "#/components/schemas/TargetId"
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "targetId",
+          "name",
+          "provider",
+          "locatorHash",
+          "providerVersion",
+          "lastUsedAt",
+          "rotatedAt",
+          "deletedAt",
+          "createdAt"
         ],
         "type": "object"
       },
@@ -2102,6 +2203,250 @@
           }
         },
         "summary": "Verify an ownership challenge",
+        "tags": [
+          "Targets"
+        ]
+      }
+    },
+    "/v1/targets/{targetId}/secret-references": {
+      "get": {
+        "operationId": "listSecretReferences",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/TargetPathId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SecretReference"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Secret references.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "summary": "List secret references",
+        "tags": [
+          "Targets"
+        ]
+      },
+      "post": {
+        "operationId": "createSecretReference",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/TargetPathId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "locatorHash": {
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  },
+                  "name": {
+                    "pattern": "^[a-z][a-z0-9_-]{2,63}$",
+                    "type": "string"
+                  },
+                  "provider": {
+                    "enum": [
+                      "aws",
+                      "azure",
+                      "gcp",
+                      "vault",
+                      "local"
+                    ],
+                    "type": "string"
+                  },
+                  "providerVersion": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "provider",
+                  "locatorHash"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecretReference"
+                }
+              }
+            },
+            "description": "Secret reference created.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "summary": "Create a secret reference",
+        "tags": [
+          "Targets"
+        ]
+      }
+    },
+    "/v1/secret-references/{secretReferenceId}": {
+      "delete": {
+        "operationId": "deleteSecretReference",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/SecretReferencePathId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Secret reference deleted.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "summary": "Delete a secret reference",
+        "tags": [
+          "Targets"
+        ]
+      },
+      "patch": {
+        "operationId": "rotateSecretReference",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/SecretReferencePathId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "locatorHash": {
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  },
+                  "providerVersion": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "locatorHash"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecretReference"
+                }
+              }
+            },
+            "description": "Secret reference rotated.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "summary": "Rotate a secret reference",
         "tags": [
           "Targets"
         ]

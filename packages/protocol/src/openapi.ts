@@ -90,6 +90,12 @@ export const openApiDocument = {
         required: true,
         schema: { $ref: "#/components/schemas/VerificationId" },
       },
+      SecretReferencePathId: {
+        in: "path",
+        name: "secretReferenceId",
+        required: true,
+        schema: { $ref: "#/components/schemas/SecretReferenceId" },
+      },
     },
     responses: {
       Problem: {
@@ -263,6 +269,28 @@ export const openApiDocument = {
           verifiedAt: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
         },
         required: ["id", "organizationId", "targetId", "method", "status", "evidenceHash", "expiresAt", "createdAt", "verifiedAt"],
+        type: "object",
+      },
+      SecretReferenceId: {
+        pattern: "^secret_reference_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        type: "string",
+      },
+      SecretReference: {
+        additionalProperties: false,
+        properties: {
+          createdAt: { $ref: "#/components/schemas/UtcTimestamp" },
+          deletedAt: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
+          id: { $ref: "#/components/schemas/SecretReferenceId" },
+          lastUsedAt: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
+          locatorHash: { pattern: "^[0-9a-f]{64}$", type: "string" },
+          name: { pattern: "^[a-z][a-z0-9_-]{2,63}$", type: "string" },
+          organizationId: { $ref: "#/components/schemas/OrganizationId" },
+          provider: { enum: ["aws", "azure", "gcp", "vault", "local"], type: "string" },
+          providerVersion: { oneOf: [{ type: "string" }, { type: "null" }] },
+          rotatedAt: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
+          targetId: { $ref: "#/components/schemas/TargetId" },
+        },
+        required: ["id", "organizationId", "targetId", "name", "provider", "locatorHash", "providerVersion", "lastUsedAt", "rotatedAt", "deletedAt", "createdAt"],
         type: "object",
       },
       PageInfo: {
@@ -612,6 +640,40 @@ export const openApiDocument = {
         requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { evidence: { type: "string" }, token: { minLength: 1, type: "string" } }, required: ["token"], type: "object" } } }, required: true },
         responses: { "200": jsonResponse("Ownership verified.", { $ref: "#/components/schemas/OwnershipChallenge" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "403": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
         summary: "Verify an ownership challenge",
+        tags: ["Targets"],
+      },
+    },
+    "/v1/targets/{targetId}/secret-references": {
+      get: {
+        operationId: "listSecretReferences",
+        parameters: [...protectedOperationParameters, { $ref: "#/components/parameters/TargetPathId" }],
+        responses: { "200": jsonResponse("Secret references.", { items: { $ref: "#/components/schemas/SecretReference" }, type: "array" }), "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        summary: "List secret references",
+        tags: ["Targets"],
+      },
+      post: {
+        operationId: "createSecretReference",
+        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/TargetPathId" }],
+        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { locatorHash: { pattern: "^[0-9a-f]{64}$", type: "string" }, name: { pattern: "^[a-z][a-z0-9_-]{2,63}$", type: "string" }, provider: { enum: ["aws", "azure", "gcp", "vault", "local"], type: "string" }, providerVersion: { type: "string" } }, required: ["name", "provider", "locatorHash"], type: "object" } } }, required: true },
+        responses: { "201": jsonResponse("Secret reference created.", { $ref: "#/components/schemas/SecretReference" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "409": { $ref: "#/components/responses/Problem" } },
+        summary: "Create a secret reference",
+        tags: ["Targets"],
+      },
+    },
+    "/v1/secret-references/{secretReferenceId}": {
+      delete: {
+        operationId: "deleteSecretReference",
+        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/SecretReferencePathId" }],
+        responses: { "204": { description: "Secret reference deleted.", headers: { "X-Request-Id": requestIdHeader } }, "401": { $ref: "#/components/responses/Problem" }, "403": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        summary: "Delete a secret reference",
+        tags: ["Targets"],
+      },
+      patch: {
+        operationId: "rotateSecretReference",
+        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/SecretReferencePathId" }],
+        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { locatorHash: { pattern: "^[0-9a-f]{64}$", type: "string" }, providerVersion: { type: "string" } }, required: ["locatorHash"], type: "object" } } }, required: true },
+        responses: { "200": jsonResponse("Secret reference rotated.", { $ref: "#/components/schemas/SecretReference" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        summary: "Rotate a secret reference",
         tags: ["Targets"],
       },
     },
