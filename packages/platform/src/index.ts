@@ -33,6 +33,7 @@ export * from "./delivery/webhook.js";
 export * from "./scheduler/service.js";
 export * from "./security/rate-limit.js";
 export * from "./security/tenant.js";
+export * from "./security/redaction.js";
 export * from "./secrets/providers.js";
 export * from "./observability/tracing.js";
 export * from "./observability/metrics.js";

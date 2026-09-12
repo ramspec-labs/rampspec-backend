@@ -1,0 +1,1 @@
+export function assertNoCredentialMaterial(value: unknown): void { const serialized = typeof value === "string" ? value : JSON.stringify(value); if (/(?:private[ _-]?key|client[ _-]?secret|password|secret[ _-]?value)\b[^:=]{0,8}[:=]\s*["']?\S+/iu.test(serialized)) throw new Error("Credential material detected."); }
