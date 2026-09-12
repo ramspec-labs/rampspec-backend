@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { DeliveryService } from "./service.js";
+describe("delivery records", () => { it("creates immutable hashed deliveries and tracks retries", () => { const service = new DeliveryService(); const delivery = service.create("report_00000000-0000-4000-8000-000000000001", "webhook", { ok: true }); expect(delivery.payloadHash).toHaveLength(64); expect(service.update(delivery.id, "failed").retryCount).toBe(1); expect(service.update(delivery.id, "delivered").state).toBe("delivered"); expect(() => service.update(delivery.id, "failed")).toThrow("terminal"); }); });
