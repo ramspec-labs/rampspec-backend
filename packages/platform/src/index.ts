@@ -31,6 +31,7 @@ export * from "./reports/sign.js";
 export * from "./delivery/service.js";
 export * from "./delivery/webhook.js";
 export * from "./scheduler/service.js";
+export * from "./security/rate-limit.js";
 export * from "./auth/sessions.js";
 export * from "./database/migrations.js";
 export * from "./database/postgres.js";
