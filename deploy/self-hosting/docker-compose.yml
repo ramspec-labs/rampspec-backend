@@ -1,0 +1,11 @@
+services:
+  api:
+    image: ghcr.io/rampspec-labs/backend:0.1.0
+    read_only: true
+  worker:
+    image: ghcr.io/rampspec-labs/backend:0.1.0
+    read_only: true
+  postgres:
+    image: postgres:16
+  redis:
+    image: redis:7
