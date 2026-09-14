@@ -1,0 +1,2 @@
+export type FindingDisposition = { findingId: string; status: "open" | "accepted" | "resolved"; owner: string; expiresAt?: string; note: string };
+export function applyDisposition(disposition: FindingDisposition, now = new Date()) { if (disposition.status === "accepted" && disposition.expiresAt && new Date(disposition.expiresAt) <= now) throw new Error("Exception is expired."); if (!disposition.note.trim()) throw new Error("Triage note is required."); return Object.freeze({ ...disposition }); }
