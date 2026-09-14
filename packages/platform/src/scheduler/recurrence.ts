@@ -1,0 +1,1 @@
+export function nextRun(after: Date, intervalMinutes: number) { if (!Number.isInteger(intervalMinutes) || intervalMinutes < 1) throw new Error("Invalid recurrence."); return new Date(after.getTime() + intervalMinutes * 60_000); }
