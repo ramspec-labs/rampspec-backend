@@ -1,0 +1,5 @@
+environments:
+  local: { credentials: isolated, bucket: rampspec-local, namespace: rampspec-local }
+  ci: { credentials: ephemeral, bucket: rampspec-ci, namespace: rampspec-ci }
+  staging: { credentials: staging-only, bucket: rampspec-staging, namespace: rampspec-staging }
+  production: { credentials: production-only, bucket: rampspec-production, namespace: rampspec-production }
