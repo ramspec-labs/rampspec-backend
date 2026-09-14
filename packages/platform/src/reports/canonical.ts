@@ -1,0 +1,2 @@
+export type CanonicalReport = { schemaVersion: string; reportId: string; runId: string; targetId: string; suiteHash: string; checks: { passed: number; failed: number; skipped: number }; findings: readonly string[]; indeterminate: boolean; finalizedAt: string };
+export function buildCanonicalReport(input: Omit<CanonicalReport, "finalizedAt">, now = new Date()) { if (input.checks.passed + input.checks.failed + input.checks.skipped < 1) throw new Error("Report requires checks."); return Object.freeze({ ...input, finalizedAt: now.toISOString() }); }
