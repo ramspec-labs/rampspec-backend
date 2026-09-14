@@ -1,0 +1,8 @@
+{
+  "product": "rampspec-backend",
+  "version": "0.1.0",
+  "api": "v1",
+  "contractRelease": ">=0.1.0 <1.0.0",
+  "frontendRelease": ">=0.1.0 <1.0.0",
+  "node": ">=24 <25"
+}
