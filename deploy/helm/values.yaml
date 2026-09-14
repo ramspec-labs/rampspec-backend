@@ -1,0 +1,12 @@
+api:
+  replicas: 2
+  serviceAccount: rampspec-api
+worker:
+  replicas: 2
+  serviceAccount: rampspec-worker
+networkPolicy:
+  enabled: true
+storage:
+  postgres: private
+  redis: private
+  objectStore: encrypted
