@@ -1,0 +1,2 @@
+export function exportJunit(report: { reportId: string; checks: { passed: number; failed: number } }) { return `<testsuite name="${report.reportId}" tests="${report.checks.passed + report.checks.failed}" failures="${report.checks.failed}"/>`; }
+export function diffReports(before: Record<string, unknown>, after: Record<string, unknown>) { return Object.keys({ ...before, ...after }).filter((key) => JSON.stringify(before[key]) !== JSON.stringify(after[key])); }
