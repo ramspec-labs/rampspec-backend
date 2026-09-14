@@ -1,0 +1,2 @@
+export type RunEvent = { id: number; runId: string; type: string; at: string; payload: unknown };
+export class RunEventLog { private nextId = 1; private events: RunEvent[] = []; append(runId: string, type: string, payload: unknown, at = new Date().toISOString()) { const event = { id: this.nextId++, runId, type, at, payload }; this.events.push(Object.freeze(event)); return event; } since(runId: string, lastId = 0) { return this.events.filter((event) => event.runId === runId && event.id > lastId); } }
