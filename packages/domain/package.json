@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@stellar/stellar-sdk": "17.0.1",
+    "@stellar/stellar-sdk": "17.2.1",
     "decimal.js": "10.6.0"
   }
 }
