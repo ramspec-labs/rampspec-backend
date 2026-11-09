@@ -133,7 +133,11 @@ export const openApiDocument = {
             additionalProperties: false,
             properties: {
               allowPubnet: { type: "boolean" },
-              evidenceRetentionDays: { maximum: 3650, minimum: 1, type: "integer" },
+              evidenceRetentionDays: {
+                maximum: 3650,
+                minimum: 1,
+                type: "integer",
+              },
               reportSigningKeyRef: { minLength: 1, type: "string" },
             },
             required: ["allowPubnet", "evidenceRetentionDays"],
@@ -143,7 +147,16 @@ export const openApiDocument = {
           status: { enum: ["active", "suspended", "deleted"], type: "string" },
           updatedAt: { $ref: "#/components/schemas/UtcTimestamp" },
         },
-        required: ["id", "slug", "name", "ownerUserId", "policy", "status", "createdAt", "updatedAt"],
+        required: [
+          "id",
+          "slug",
+          "name",
+          "ownerUserId",
+          "policy",
+          "status",
+          "createdAt",
+          "updatedAt",
+        ],
         type: "object",
       },
       OrganizationPolicy: {
@@ -169,22 +182,44 @@ export const openApiDocument = {
       Project: {
         additionalProperties: false,
         properties: {
-          archivedAt: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
+          archivedAt: {
+            oneOf: [
+              { $ref: "#/components/schemas/UtcTimestamp" },
+              { type: "null" },
+            ],
+          },
           createdAt: { $ref: "#/components/schemas/UtcTimestamp" },
           id: { $ref: "#/components/schemas/ProjectId" },
           name: { maxLength: 200, minLength: 1, type: "string" },
           organizationId: { $ref: "#/components/schemas/OrganizationId" },
           policy: { type: "object" },
-          repositoryUrl: { oneOf: [{ format: "uri", pattern: "^https://", type: "string" }, { type: "null" }] },
+          repositoryUrl: {
+            oneOf: [
+              { format: "uri", pattern: "^https://", type: "string" },
+              { type: "null" },
+            ],
+          },
           slug: { pattern: "^[a-z][a-z0-9-]{2,62}$", type: "string" },
           status: { enum: ["active", "archived"], type: "string" },
           updatedAt: { $ref: "#/components/schemas/UtcTimestamp" },
         },
-        required: ["id", "organizationId", "slug", "name", "repositoryUrl", "policy", "status", "archivedAt", "createdAt", "updatedAt"],
+        required: [
+          "id",
+          "organizationId",
+          "slug",
+          "name",
+          "repositoryUrl",
+          "policy",
+          "status",
+          "archivedAt",
+          "createdAt",
+          "updatedAt",
+        ],
         type: "object",
       },
       ProjectId: {
-        pattern: "^project_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        pattern:
+          "^project_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
         type: "string",
       },
       ProjectUpdate: {
@@ -193,104 +228,234 @@ export const openApiDocument = {
         properties: {
           name: { maxLength: 200, minLength: 1, type: "string" },
           policy: { type: "object" },
-          repositoryUrl: { oneOf: [{ format: "uri", pattern: "^https://", type: "string" }, { type: "null" }] },
+          repositoryUrl: {
+            oneOf: [
+              { format: "uri", pattern: "^https://", type: "string" },
+              { type: "null" },
+            ],
+          },
           slug: { pattern: "^[a-z][a-z0-9-]{2,62}$", type: "string" },
         },
         type: "object",
       },
       AssetId: {
-        pattern: "^asset_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        pattern:
+          "^asset_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
         type: "string",
       },
       Corridor: {
         additionalProperties: false,
         properties: {
           createdAt: { $ref: "#/components/schemas/UtcTimestamp" },
-          direction: { enum: ["deposit", "withdrawal", "send", "receive"], type: "string" },
+          direction: {
+            enum: ["deposit", "withdrawal", "send", "receive"],
+            type: "string",
+          },
           enabled: { type: "boolean" },
           id: { $ref: "#/components/schemas/CorridorId" },
           inputAssetId: { $ref: "#/components/schemas/AssetId" },
           metadata: { type: "object" },
-          methods: { items: { minLength: 1, type: "string" }, maxItems: 64, minItems: 1, type: "array" },
+          methods: {
+            items: { minLength: 1, type: "string" },
+            maxItems: 64,
+            minItems: 1,
+            type: "array",
+          },
           organizationId: { $ref: "#/components/schemas/OrganizationId" },
           outputAssetId: { $ref: "#/components/schemas/AssetId" },
           targetId: { $ref: "#/components/schemas/TargetId" },
         },
-        required: ["id", "organizationId", "targetId", "inputAssetId", "outputAssetId", "direction", "methods", "enabled", "metadata", "createdAt"],
+        required: [
+          "id",
+          "organizationId",
+          "targetId",
+          "inputAssetId",
+          "outputAssetId",
+          "direction",
+          "methods",
+          "enabled",
+          "metadata",
+          "createdAt",
+        ],
         type: "object",
       },
       CorridorId: {
-        pattern: "^corridor_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        pattern:
+          "^corridor_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
         type: "string",
       },
       Target: {
         additionalProperties: false,
         properties: {
-          archivedAt: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
+          archivedAt: {
+            oneOf: [
+              { $ref: "#/components/schemas/UtcTimestamp" },
+              { type: "null" },
+            ],
+          },
           createdAt: { $ref: "#/components/schemas/UtcTimestamp" },
-          customNetworkId: { oneOf: [{ minLength: 3, type: "string" }, { type: "null" }] },
-          expectedMethods: { items: { minLength: 1, type: "string" }, maxItems: 64, type: "array" },
-          expectedSeps: { items: { minLength: 1, type: "string" }, maxItems: 128, type: "array" },
+          customNetworkId: {
+            oneOf: [{ minLength: 3, type: "string" }, { type: "null" }],
+          },
+          expectedMethods: {
+            items: { minLength: 1, type: "string" },
+            maxItems: 64,
+            type: "array",
+          },
+          expectedSeps: {
+            items: { minLength: 1, type: "string" },
+            maxItems: 128,
+            type: "array",
+          },
           id: { $ref: "#/components/schemas/TargetId" },
           metadata: { type: "object" },
           name: { maxLength: 200, minLength: 1, type: "string" },
           networkPassphrase: { minLength: 1, type: "string" },
-          normalizedOrigin: { format: "uri", pattern: "^https://", type: "string" },
+          normalizedOrigin: {
+            format: "uri",
+            pattern: "^https://",
+            type: "string",
+          },
           organizationId: { $ref: "#/components/schemas/OrganizationId" },
           projectId: { $ref: "#/components/schemas/ProjectId" },
           runnerPolicy: { type: "object" },
-          status: { enum: ["pending_verification", "verified", "suspended", "archived"], type: "string" },
-          stellarNetwork: { enum: ["testnet", "pubnet", "futurenet", "custom"], type: "string" },
+          status: {
+            enum: ["pending_verification", "verified", "suspended", "archived"],
+            type: "string",
+          },
+          stellarNetwork: {
+            enum: ["testnet", "pubnet", "futurenet", "custom"],
+            type: "string",
+          },
           updatedAt: { $ref: "#/components/schemas/UtcTimestamp" },
-          verifiedUntil: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
+          verifiedUntil: {
+            oneOf: [
+              { $ref: "#/components/schemas/UtcTimestamp" },
+              { type: "null" },
+            ],
+          },
         },
-        required: ["id", "organizationId", "projectId", "name", "normalizedOrigin", "stellarNetwork", "networkPassphrase", "customNetworkId", "expectedSeps", "expectedMethods", "runnerPolicy", "metadata", "status", "verifiedUntil", "archivedAt", "createdAt", "updatedAt"],
+        required: [
+          "id",
+          "organizationId",
+          "projectId",
+          "name",
+          "normalizedOrigin",
+          "stellarNetwork",
+          "networkPassphrase",
+          "customNetworkId",
+          "expectedSeps",
+          "expectedMethods",
+          "runnerPolicy",
+          "metadata",
+          "status",
+          "verifiedUntil",
+          "archivedAt",
+          "createdAt",
+          "updatedAt",
+        ],
         type: "object",
       },
       TargetId: {
-        pattern: "^target_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        pattern:
+          "^target_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
         type: "string",
       },
       VerificationId: {
-        pattern: "^verification_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        pattern:
+          "^verification_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
         type: "string",
       },
       OwnershipChallenge: {
         additionalProperties: false,
         properties: {
           createdAt: { $ref: "#/components/schemas/UtcTimestamp" },
-          evidenceHash: { oneOf: [{ pattern: "^[0-9a-f]{64}$", type: "string" }, { type: "null" }] },
+          evidenceHash: {
+            oneOf: [
+              { pattern: "^[0-9a-f]{64}$", type: "string" },
+              { type: "null" },
+            ],
+          },
           expiresAt: { $ref: "#/components/schemas/UtcTimestamp" },
           id: { $ref: "#/components/schemas/VerificationId" },
           method: { enum: ["dns_txt", "well_known"], type: "string" },
           organizationId: { $ref: "#/components/schemas/OrganizationId" },
-          status: { enum: ["pending", "verified", "expired", "revoked"], type: "string" },
+          status: {
+            enum: ["pending", "verified", "expired", "revoked"],
+            type: "string",
+          },
           targetId: { $ref: "#/components/schemas/TargetId" },
-          verifiedAt: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
+          verifiedAt: {
+            oneOf: [
+              { $ref: "#/components/schemas/UtcTimestamp" },
+              { type: "null" },
+            ],
+          },
         },
-        required: ["id", "organizationId", "targetId", "method", "status", "evidenceHash", "expiresAt", "createdAt", "verifiedAt"],
+        required: [
+          "id",
+          "organizationId",
+          "targetId",
+          "method",
+          "status",
+          "evidenceHash",
+          "expiresAt",
+          "createdAt",
+          "verifiedAt",
+        ],
         type: "object",
       },
       SecretReferenceId: {
-        pattern: "^secret_reference_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        pattern:
+          "^secret_reference_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
         type: "string",
       },
       SecretReference: {
         additionalProperties: false,
         properties: {
           createdAt: { $ref: "#/components/schemas/UtcTimestamp" },
-          deletedAt: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
+          deletedAt: {
+            oneOf: [
+              { $ref: "#/components/schemas/UtcTimestamp" },
+              { type: "null" },
+            ],
+          },
           id: { $ref: "#/components/schemas/SecretReferenceId" },
-          lastUsedAt: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
+          lastUsedAt: {
+            oneOf: [
+              { $ref: "#/components/schemas/UtcTimestamp" },
+              { type: "null" },
+            ],
+          },
           locatorHash: { pattern: "^[0-9a-f]{64}$", type: "string" },
           name: { pattern: "^[a-z][a-z0-9_-]{2,63}$", type: "string" },
           organizationId: { $ref: "#/components/schemas/OrganizationId" },
-          provider: { enum: ["aws", "azure", "gcp", "vault", "local"], type: "string" },
+          provider: {
+            enum: ["aws", "azure", "gcp", "vault", "local"],
+            type: "string",
+          },
           providerVersion: { oneOf: [{ type: "string" }, { type: "null" }] },
-          rotatedAt: { oneOf: [{ $ref: "#/components/schemas/UtcTimestamp" }, { type: "null" }] },
+          rotatedAt: {
+            oneOf: [
+              { $ref: "#/components/schemas/UtcTimestamp" },
+              { type: "null" },
+            ],
+          },
           targetId: { $ref: "#/components/schemas/TargetId" },
         },
-        required: ["id", "organizationId", "targetId", "name", "provider", "locatorHash", "providerVersion", "lastUsedAt", "rotatedAt", "deletedAt", "createdAt"],
+        required: [
+          "id",
+          "organizationId",
+          "targetId",
+          "name",
+          "provider",
+          "locatorHash",
+          "providerVersion",
+          "lastUsedAt",
+          "rotatedAt",
+          "deletedAt",
+          "createdAt",
+        ],
         type: "object",
       },
       PageInfo: {
@@ -322,6 +487,116 @@ export const openApiDocument = {
       RequestId: {
         pattern:
           "^request_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        type: "string",
+      },
+      ReferenceRunRecord: {
+        additionalProperties: false,
+        properties: {
+          probe: {
+            additionalProperties: false,
+            properties: {
+              checkedAt: { $ref: "#/components/schemas/UtcTimestamp" },
+              headers: {
+                additionalProperties: { type: "string" },
+                type: "object",
+              },
+              reachable: { type: "boolean" },
+              status: { oneOf: [{ type: "integer" }, { type: "null" }] },
+              supportedSeps: { items: { type: "string" }, type: "array" },
+            },
+            required: [
+              "checkedAt",
+              "headers",
+              "reachable",
+              "status",
+              "supportedSeps",
+            ],
+            type: "object",
+          },
+          report: {
+            additionalProperties: false,
+            properties: {
+              evidenceManifestHash: {
+                pattern: "^[0-9a-f]{64}$",
+                type: "string",
+              },
+              findingIds: { items: { type: "string" }, type: "array" },
+              generatedAt: { $ref: "#/components/schemas/UtcTimestamp" },
+              reportId: { $ref: "#/components/schemas/ReportId" },
+              runId: { $ref: "#/components/schemas/RunId" },
+              summary: {
+                additionalProperties: false,
+                properties: {
+                  failed: { minimum: 0, type: "integer" },
+                  passed: { minimum: 0, type: "integer" },
+                  skipped: { minimum: 0, type: "integer" },
+                  warnings: { minimum: 0, type: "integer" },
+                },
+                required: ["failed", "passed", "skipped", "warnings"],
+                type: "object",
+              },
+            },
+            required: [
+              "evidenceManifestHash",
+              "findingIds",
+              "generatedAt",
+              "reportId",
+              "runId",
+              "summary",
+            ],
+            type: "object",
+          },
+          run: {
+            additionalProperties: false,
+            properties: {
+              createdAt: { $ref: "#/components/schemas/UtcTimestamp" },
+              effectiveConfig: { type: "object" },
+              effectiveConfigHash: {
+                pattern: "^[0-9a-f]{64}$",
+                type: "string",
+              },
+              id: { $ref: "#/components/schemas/RunId" },
+              idempotencyKey: { type: "string" },
+              organizationId: { $ref: "#/components/schemas/OrganizationId" },
+              projectId: { $ref: "#/components/schemas/ProjectId" },
+              state: { enum: ["completed", "failed"], type: "string" },
+              suiteId: { $ref: "#/components/schemas/SuiteId" },
+              suiteVersion: { type: "string" },
+              targetId: { $ref: "#/components/schemas/TargetId" },
+            },
+            required: [
+              "createdAt",
+              "effectiveConfig",
+              "effectiveConfigHash",
+              "id",
+              "idempotencyKey",
+              "organizationId",
+              "projectId",
+              "state",
+              "suiteId",
+              "suiteVersion",
+              "targetId",
+            ],
+            type: "object",
+          },
+          targetOrigin: { format: "uri", pattern: "^https://", type: "string" },
+        },
+        required: ["probe", "report", "run", "targetOrigin"],
+        type: "object",
+      },
+      ReportId: {
+        pattern:
+          "^report_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        type: "string",
+      },
+      RunId: {
+        pattern:
+          "^run_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        type: "string",
+      },
+      SuiteId: {
+        pattern:
+          "^suite_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
         type: "string",
       },
       UtcTimestamp: {
@@ -359,14 +634,105 @@ export const openApiDocument = {
         responses: {
           "200": jsonResponse("Service health.", {
             additionalProperties: false,
-            properties: { status: { const: "ok", type: "string" } },
-            required: ["status"],
+            properties: {
+              persistence: { const: "json-file", type: "string" },
+              status: { const: "ok", type: "string" },
+              version: { type: "string" },
+            },
+            required: ["persistence", "status", "version"],
             type: "object",
           }),
         },
         security: [],
         summary: "Read service health",
         tags: ["System"],
+      },
+    },
+    "/version": {
+      get: {
+        operationId: "getVersion",
+        responses: {
+          "200": jsonResponse("Service version.", {
+            additionalProperties: false,
+            properties: {
+              api: { const: "v1", type: "string" },
+              version: { type: "string" },
+            },
+            required: ["api", "version"],
+            type: "object",
+          }),
+        },
+        security: [],
+        summary: "Read service version",
+        tags: ["System"],
+      },
+    },
+    "/v1/reference-runs": {
+      post: {
+        operationId: "createReferenceRun",
+        parameters: mutationOperationParameters,
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                additionalProperties: false,
+                properties: {
+                  effectiveConfig: { type: "object" },
+                  projectId: { $ref: "#/components/schemas/ProjectId" },
+                  suiteId: { $ref: "#/components/schemas/SuiteId" },
+                  suiteVersion: { minLength: 1, type: "string" },
+                  targetId: { $ref: "#/components/schemas/TargetId" },
+                  targetOrigin: {
+                    format: "uri",
+                    pattern: "^https://",
+                    type: "string",
+                  },
+                },
+                required: [
+                  "projectId",
+                  "suiteId",
+                  "suiteVersion",
+                  "targetId",
+                  "targetOrigin",
+                ],
+                type: "object",
+              },
+            },
+          },
+          required: true,
+        },
+        responses: {
+          "201": jsonResponse("Reference run completed.", {
+            $ref: "#/components/schemas/ReferenceRunRecord",
+          }),
+          "400": { $ref: "#/components/responses/Problem" },
+        },
+        security: [],
+        summary: "Run the public SEP-1 reference check",
+        tags: ["Reference runs"],
+      },
+    },
+    "/v1/reference-runs/{runId}": {
+      get: {
+        operationId: "getReferenceRun",
+        parameters: [
+          { $ref: "#/components/parameters/OrganizationId" },
+          {
+            in: "path",
+            name: "runId",
+            required: true,
+            schema: { $ref: "#/components/schemas/RunId" },
+          },
+        ],
+        responses: {
+          "200": jsonResponse("Reference run and report.", {
+            $ref: "#/components/schemas/ReferenceRunRecord",
+          }),
+          "404": { $ref: "#/components/responses/Problem" },
+        },
+        security: [],
+        summary: "Read a reference run",
+        tags: ["Reference runs"],
       },
     },
     "/v1/context": {
@@ -398,8 +764,16 @@ export const openApiDocument = {
           "200": jsonResponse("A page of organizations.", {
             additionalProperties: false,
             properties: {
-              items: { items: { $ref: "#/components/schemas/Organization" }, type: "array" },
-              nextCursor: { oneOf: [{ $ref: "#/components/schemas/OpaqueCursor" }, { type: "null" }] },
+              items: {
+                items: { $ref: "#/components/schemas/Organization" },
+                type: "array",
+              },
+              nextCursor: {
+                oneOf: [
+                  { $ref: "#/components/schemas/OpaqueCursor" },
+                  { type: "null" },
+                ],
+              },
             },
             required: ["items", "nextCursor"],
             type: "object",
@@ -431,7 +805,9 @@ export const openApiDocument = {
           required: true,
         },
         responses: {
-          "201": jsonResponse("Organization created.", { $ref: "#/components/schemas/Organization" }),
+          "201": jsonResponse("Organization created.", {
+            $ref: "#/components/schemas/Organization",
+          }),
           "400": { $ref: "#/components/responses/Problem" },
           "401": { $ref: "#/components/responses/Problem" },
           "409": { $ref: "#/components/responses/Problem" },
@@ -443,9 +819,15 @@ export const openApiDocument = {
     "/v1/organizations/{organizationId}": {
       delete: {
         operationId: "deleteOrganization",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/OrganizationPathId" }],
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/OrganizationPathId" },
+        ],
         responses: {
-          "204": { description: "Organization deleted.", headers: { "X-Request-Id": requestIdHeader } },
+          "204": {
+            description: "Organization deleted.",
+            headers: { "X-Request-Id": requestIdHeader },
+          },
           "401": { $ref: "#/components/responses/Problem" },
           "403": { $ref: "#/components/responses/Problem" },
           "404": { $ref: "#/components/responses/Problem" },
@@ -455,9 +837,14 @@ export const openApiDocument = {
       },
       get: {
         operationId: "getOrganization",
-        parameters: [...protectedOperationParameters, { $ref: "#/components/parameters/OrganizationPathId" }],
+        parameters: [
+          ...protectedOperationParameters,
+          { $ref: "#/components/parameters/OrganizationPathId" },
+        ],
         responses: {
-          "200": jsonResponse("Organization details.", { $ref: "#/components/schemas/Organization" }),
+          "200": jsonResponse("Organization details.", {
+            $ref: "#/components/schemas/Organization",
+          }),
           "401": { $ref: "#/components/responses/Problem" },
           "404": { $ref: "#/components/responses/Problem" },
         },
@@ -466,13 +853,22 @@ export const openApiDocument = {
       },
       patch: {
         operationId: "updateOrganization",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/OrganizationPathId" }],
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/OrganizationPathId" },
+        ],
         requestBody: {
-          content: { "application/json": { schema: { $ref: "#/components/schemas/OrganizationUpdate" } } },
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/OrganizationUpdate" },
+            },
+          },
           required: true,
         },
         responses: {
-          "200": jsonResponse("Organization updated.", { $ref: "#/components/schemas/Organization" }),
+          "200": jsonResponse("Organization updated.", {
+            $ref: "#/components/schemas/Organization",
+          }),
           "400": { $ref: "#/components/responses/Problem" },
           "401": { $ref: "#/components/responses/Problem" },
           "403": { $ref: "#/components/responses/Problem" },
@@ -485,13 +881,40 @@ export const openApiDocument = {
     "/v1/organizations/{organizationId}/members": {
       post: {
         operationId: "inviteOrganizationMember",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/OrganizationPathId" }],
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/OrganizationPathId" },
+        ],
         requestBody: {
-          content: { "application/json": { schema: { additionalProperties: false, properties: { role: { enum: ["admin", "auditor", "maintainer", "runner", "viewer"], type: "string" }, userId: { type: "string" } }, required: ["userId", "role"], type: "object" } } },
+          content: {
+            "application/json": {
+              schema: {
+                additionalProperties: false,
+                properties: {
+                  role: {
+                    enum: [
+                      "admin",
+                      "auditor",
+                      "maintainer",
+                      "runner",
+                      "viewer",
+                    ],
+                    type: "string",
+                  },
+                  userId: { type: "string" },
+                },
+                required: ["userId", "role"],
+                type: "object",
+              },
+            },
+          },
           required: true,
         },
         responses: {
-          "202": { description: "Invitation accepted for delivery.", headers: { "X-Request-Id": requestIdHeader } },
+          "202": {
+            description: "Invitation accepted for delivery.",
+            headers: { "X-Request-Id": requestIdHeader },
+          },
           "400": { $ref: "#/components/responses/Problem" },
           "401": { $ref: "#/components/responses/Problem" },
           "403": { $ref: "#/components/responses/Problem" },
@@ -503,9 +926,28 @@ export const openApiDocument = {
     "/v1/projects": {
       get: {
         operationId: "listProjects",
-        parameters: [...protectedOperationParameters, { $ref: "#/components/parameters/Cursor" }],
+        parameters: [
+          ...protectedOperationParameters,
+          { $ref: "#/components/parameters/Cursor" },
+        ],
         responses: {
-          "200": jsonResponse("A page of projects.", { additionalProperties: false, properties: { items: { items: { $ref: "#/components/schemas/Project" }, type: "array" }, nextCursor: { oneOf: [{ $ref: "#/components/schemas/OpaqueCursor" }, { type: "null" }] } }, required: ["items", "nextCursor"], type: "object" }),
+          "200": jsonResponse("A page of projects.", {
+            additionalProperties: false,
+            properties: {
+              items: {
+                items: { $ref: "#/components/schemas/Project" },
+                type: "array",
+              },
+              nextCursor: {
+                oneOf: [
+                  { $ref: "#/components/schemas/OpaqueCursor" },
+                  { type: "null" },
+                ],
+              },
+            },
+            required: ["items", "nextCursor"],
+            type: "object",
+          }),
           "401": { $ref: "#/components/responses/Problem" },
         },
         summary: "List projects",
@@ -514,9 +956,36 @@ export const openApiDocument = {
       post: {
         operationId: "createProject",
         parameters: mutationOperationParameters,
-        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { name: { maxLength: 200, minLength: 1, type: "string" }, organizationId: { $ref: "#/components/schemas/OrganizationId" }, policy: { type: "object" }, repositoryUrl: { oneOf: [{ format: "uri", pattern: "^https://", type: "string" }, { type: "null" }] }, slug: { pattern: "^[a-z][a-z0-9-]{2,62}$", type: "string" } }, required: ["name", "organizationId", "slug"], type: "object" } } }, required: true },
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                additionalProperties: false,
+                properties: {
+                  name: { maxLength: 200, minLength: 1, type: "string" },
+                  organizationId: {
+                    $ref: "#/components/schemas/OrganizationId",
+                  },
+                  policy: { type: "object" },
+                  repositoryUrl: {
+                    oneOf: [
+                      { format: "uri", pattern: "^https://", type: "string" },
+                      { type: "null" },
+                    ],
+                  },
+                  slug: { pattern: "^[a-z][a-z0-9-]{2,62}$", type: "string" },
+                },
+                required: ["name", "organizationId", "slug"],
+                type: "object",
+              },
+            },
+          },
+          required: true,
+        },
         responses: {
-          "201": jsonResponse("Project created.", { $ref: "#/components/schemas/Project" }),
+          "201": jsonResponse("Project created.", {
+            $ref: "#/components/schemas/Project",
+          }),
           "400": { $ref: "#/components/responses/Problem" },
           "401": { $ref: "#/components/responses/Problem" },
           "409": { $ref: "#/components/responses/Problem" },
@@ -528,23 +997,61 @@ export const openApiDocument = {
     "/v1/projects/{projectId}": {
       delete: {
         operationId: "archiveProject",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/ProjectPathId" }],
-        responses: { "204": { description: "Project archived.", headers: { "X-Request-Id": requestIdHeader } }, "401": { $ref: "#/components/responses/Problem" }, "403": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/ProjectPathId" },
+        ],
+        responses: {
+          "204": {
+            description: "Project archived.",
+            headers: { "X-Request-Id": requestIdHeader },
+          },
+          "401": { $ref: "#/components/responses/Problem" },
+          "403": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Archive a project",
         tags: ["Projects"],
       },
       get: {
         operationId: "getProject",
-        parameters: [...protectedOperationParameters, { $ref: "#/components/parameters/ProjectPathId" }],
-        responses: { "200": jsonResponse("Project details.", { $ref: "#/components/schemas/Project" }), "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...protectedOperationParameters,
+          { $ref: "#/components/parameters/ProjectPathId" },
+        ],
+        responses: {
+          "200": jsonResponse("Project details.", {
+            $ref: "#/components/schemas/Project",
+          }),
+          "401": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Get a project",
         tags: ["Projects"],
       },
       patch: {
         operationId: "updateProject",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/ProjectPathId" }],
-        requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/ProjectUpdate" } } }, required: true },
-        responses: { "200": jsonResponse("Project updated.", { $ref: "#/components/schemas/Project" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "403": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/ProjectPathId" },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ProjectUpdate" },
+            },
+          },
+          required: true,
+        },
+        responses: {
+          "200": jsonResponse("Project updated.", {
+            $ref: "#/components/schemas/Project",
+          }),
+          "400": { $ref: "#/components/responses/Problem" },
+          "401": { $ref: "#/components/responses/Problem" },
+          "403": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Update a project",
         tags: ["Projects"],
       },
@@ -553,15 +1060,74 @@ export const openApiDocument = {
       get: {
         operationId: "listTargets",
         parameters: protectedOperationParameters,
-        responses: { "200": jsonResponse("Tenant targets.", { items: { $ref: "#/components/schemas/Target" }, type: "array" }), "401": { $ref: "#/components/responses/Problem" } },
+        responses: {
+          "200": jsonResponse("Tenant targets.", {
+            items: { $ref: "#/components/schemas/Target" },
+            type: "array",
+          }),
+          "401": { $ref: "#/components/responses/Problem" },
+        },
         summary: "List targets",
         tags: ["Targets"],
       },
       post: {
         operationId: "createTarget",
         parameters: mutationOperationParameters,
-        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { customNetworkId: { type: "string" }, expectedMethods: { items: { type: "string" }, maxItems: 64, type: "array" }, expectedSeps: { items: { type: "string" }, maxItems: 128, type: "array" }, name: { maxLength: 200, minLength: 1, type: "string" }, networkPassphrase: { minLength: 1, type: "string" }, origin: { format: "uri", pattern: "^https://", type: "string" }, organizationId: { $ref: "#/components/schemas/OrganizationId" }, projectId: { $ref: "#/components/schemas/ProjectId" }, stellarNetwork: { enum: ["testnet", "pubnet", "futurenet", "custom"], type: "string" } }, required: ["organizationId", "projectId", "name", "origin", "stellarNetwork", "networkPassphrase"], type: "object" } } }, required: true },
-        responses: { "201": jsonResponse("Target created.", { $ref: "#/components/schemas/Target" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "409": { $ref: "#/components/responses/Problem" } },
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                additionalProperties: false,
+                properties: {
+                  customNetworkId: { type: "string" },
+                  expectedMethods: {
+                    items: { type: "string" },
+                    maxItems: 64,
+                    type: "array",
+                  },
+                  expectedSeps: {
+                    items: { type: "string" },
+                    maxItems: 128,
+                    type: "array",
+                  },
+                  name: { maxLength: 200, minLength: 1, type: "string" },
+                  networkPassphrase: { minLength: 1, type: "string" },
+                  origin: {
+                    format: "uri",
+                    pattern: "^https://",
+                    type: "string",
+                  },
+                  organizationId: {
+                    $ref: "#/components/schemas/OrganizationId",
+                  },
+                  projectId: { $ref: "#/components/schemas/ProjectId" },
+                  stellarNetwork: {
+                    enum: ["testnet", "pubnet", "futurenet", "custom"],
+                    type: "string",
+                  },
+                },
+                required: [
+                  "organizationId",
+                  "projectId",
+                  "name",
+                  "origin",
+                  "stellarNetwork",
+                  "networkPassphrase",
+                ],
+                type: "object",
+              },
+            },
+          },
+          required: true,
+        },
+        responses: {
+          "201": jsonResponse("Target created.", {
+            $ref: "#/components/schemas/Target",
+          }),
+          "400": { $ref: "#/components/responses/Problem" },
+          "401": { $ref: "#/components/responses/Problem" },
+          "409": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Create a target",
         tags: ["Targets"],
       },
@@ -569,15 +1135,35 @@ export const openApiDocument = {
     "/v1/targets/{targetId}": {
       delete: {
         operationId: "archiveTarget",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/TargetPathId" }],
-        responses: { "204": { description: "Target archived.", headers: { "X-Request-Id": requestIdHeader } }, "401": { $ref: "#/components/responses/Problem" }, "403": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/TargetPathId" },
+        ],
+        responses: {
+          "204": {
+            description: "Target archived.",
+            headers: { "X-Request-Id": requestIdHeader },
+          },
+          "401": { $ref: "#/components/responses/Problem" },
+          "403": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Archive a target",
         tags: ["Targets"],
       },
       get: {
         operationId: "getTarget",
-        parameters: [...protectedOperationParameters, { $ref: "#/components/parameters/TargetPathId" }],
-        responses: { "200": jsonResponse("Target details.", { $ref: "#/components/schemas/Target" }), "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...protectedOperationParameters,
+          { $ref: "#/components/parameters/TargetPathId" },
+        ],
+        responses: {
+          "200": jsonResponse("Target details.", {
+            $ref: "#/components/schemas/Target",
+          }),
+          "401": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Get a target",
         tags: ["Targets"],
       },
@@ -585,16 +1171,67 @@ export const openApiDocument = {
     "/v1/targets/{targetId}/corridors": {
       get: {
         operationId: "listTargetCorridors",
-        parameters: [...protectedOperationParameters, { $ref: "#/components/parameters/TargetPathId" }],
-        responses: { "200": jsonResponse("Target corridors.", { items: { $ref: "#/components/schemas/Corridor" }, type: "array" }), "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...protectedOperationParameters,
+          { $ref: "#/components/parameters/TargetPathId" },
+        ],
+        responses: {
+          "200": jsonResponse("Target corridors.", {
+            items: { $ref: "#/components/schemas/Corridor" },
+            type: "array",
+          }),
+          "401": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "List target corridors",
         tags: ["Targets"],
       },
       post: {
         operationId: "createTargetCorridor",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/TargetPathId" }],
-        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { direction: { enum: ["deposit", "withdrawal", "send", "receive"], type: "string" }, inputAssetId: { $ref: "#/components/schemas/AssetId" }, methods: { items: { type: "string" }, maxItems: 64, minItems: 1, type: "array" }, outputAssetId: { $ref: "#/components/schemas/AssetId" } }, required: ["inputAssetId", "outputAssetId", "direction", "methods"], type: "object" } } }, required: true },
-        responses: { "201": jsonResponse("Corridor created.", { $ref: "#/components/schemas/Corridor" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" }, "409": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/TargetPathId" },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                additionalProperties: false,
+                properties: {
+                  direction: {
+                    enum: ["deposit", "withdrawal", "send", "receive"],
+                    type: "string",
+                  },
+                  inputAssetId: { $ref: "#/components/schemas/AssetId" },
+                  methods: {
+                    items: { type: "string" },
+                    maxItems: 64,
+                    minItems: 1,
+                    type: "array",
+                  },
+                  outputAssetId: { $ref: "#/components/schemas/AssetId" },
+                },
+                required: [
+                  "inputAssetId",
+                  "outputAssetId",
+                  "direction",
+                  "methods",
+                ],
+                type: "object",
+              },
+            },
+          },
+          required: true,
+        },
+        responses: {
+          "201": jsonResponse("Corridor created.", {
+            $ref: "#/components/schemas/Corridor",
+          }),
+          "400": { $ref: "#/components/responses/Problem" },
+          "401": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+          "409": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Create a target corridor",
         tags: ["Targets"],
       },
@@ -602,9 +1239,31 @@ export const openApiDocument = {
     "/v1/corridors/{corridorId}": {
       patch: {
         operationId: "setCorridorEnabled",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/CorridorPathId" }],
-        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { enabled: { type: "boolean" } }, required: ["enabled"], type: "object" } } }, required: true },
-        responses: { "200": jsonResponse("Corridor updated.", { $ref: "#/components/schemas/Corridor" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/CorridorPathId" },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                additionalProperties: false,
+                properties: { enabled: { type: "boolean" } },
+                required: ["enabled"],
+                type: "object",
+              },
+            },
+          },
+          required: true,
+        },
+        responses: {
+          "200": jsonResponse("Corridor updated.", {
+            $ref: "#/components/schemas/Corridor",
+          }),
+          "400": { $ref: "#/components/responses/Problem" },
+          "401": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Enable or disable a corridor",
         tags: ["Targets"],
       },
@@ -612,16 +1271,57 @@ export const openApiDocument = {
     "/v1/targets/{targetId}/ownership-challenges": {
       get: {
         operationId: "listOwnershipChallenges",
-        parameters: [...protectedOperationParameters, { $ref: "#/components/parameters/TargetPathId" }],
-        responses: { "200": jsonResponse("Ownership challenges.", { items: { $ref: "#/components/schemas/OwnershipChallenge" }, type: "array" }), "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...protectedOperationParameters,
+          { $ref: "#/components/parameters/TargetPathId" },
+        ],
+        responses: {
+          "200": jsonResponse("Ownership challenges.", {
+            items: { $ref: "#/components/schemas/OwnershipChallenge" },
+            type: "array",
+          }),
+          "401": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "List ownership challenges",
         tags: ["Targets"],
       },
       post: {
         operationId: "createOwnershipChallenge",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/TargetPathId" }],
-        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { method: { enum: ["dns_txt", "well_known"], type: "string" }, ttlSeconds: { maximum: 86400, minimum: 60, type: "integer" } }, required: ["method"], type: "object" } } }, required: true },
-        responses: { "201": jsonResponse("Ownership challenge created.", { additionalProperties: false, properties: { challenge: { $ref: "#/components/schemas/OwnershipChallenge" }, token: { minLength: 1, type: "string" } }, required: ["challenge", "token"], type: "object" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "409": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/TargetPathId" },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                additionalProperties: false,
+                properties: {
+                  method: { enum: ["dns_txt", "well_known"], type: "string" },
+                  ttlSeconds: { maximum: 86400, minimum: 60, type: "integer" },
+                },
+                required: ["method"],
+                type: "object",
+              },
+            },
+          },
+          required: true,
+        },
+        responses: {
+          "201": jsonResponse("Ownership challenge created.", {
+            additionalProperties: false,
+            properties: {
+              challenge: { $ref: "#/components/schemas/OwnershipChallenge" },
+              token: { minLength: 1, type: "string" },
+            },
+            required: ["challenge", "token"],
+            type: "object",
+          }),
+          "400": { $ref: "#/components/responses/Problem" },
+          "401": { $ref: "#/components/responses/Problem" },
+          "409": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Create an ownership challenge",
         tags: ["Targets"],
       },
@@ -629,16 +1329,53 @@ export const openApiDocument = {
     "/v1/ownership-challenges/{verificationId}": {
       delete: {
         operationId: "revokeOwnershipChallenge",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/VerificationPathId" }],
-        responses: { "204": { description: "Ownership challenge revoked.", headers: { "X-Request-Id": requestIdHeader } }, "401": { $ref: "#/components/responses/Problem" }, "403": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/VerificationPathId" },
+        ],
+        responses: {
+          "204": {
+            description: "Ownership challenge revoked.",
+            headers: { "X-Request-Id": requestIdHeader },
+          },
+          "401": { $ref: "#/components/responses/Problem" },
+          "403": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Revoke an ownership challenge",
         tags: ["Targets"],
       },
       post: {
         operationId: "verifyOwnershipChallenge",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/VerificationPathId" }],
-        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { evidence: { type: "string" }, token: { minLength: 1, type: "string" } }, required: ["token"], type: "object" } } }, required: true },
-        responses: { "200": jsonResponse("Ownership verified.", { $ref: "#/components/schemas/OwnershipChallenge" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "403": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/VerificationPathId" },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                additionalProperties: false,
+                properties: {
+                  evidence: { type: "string" },
+                  token: { minLength: 1, type: "string" },
+                },
+                required: ["token"],
+                type: "object",
+              },
+            },
+          },
+          required: true,
+        },
+        responses: {
+          "200": jsonResponse("Ownership verified.", {
+            $ref: "#/components/schemas/OwnershipChallenge",
+          }),
+          "400": { $ref: "#/components/responses/Problem" },
+          "401": { $ref: "#/components/responses/Problem" },
+          "403": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Verify an ownership challenge",
         tags: ["Targets"],
       },
@@ -646,16 +1383,56 @@ export const openApiDocument = {
     "/v1/targets/{targetId}/secret-references": {
       get: {
         operationId: "listSecretReferences",
-        parameters: [...protectedOperationParameters, { $ref: "#/components/parameters/TargetPathId" }],
-        responses: { "200": jsonResponse("Secret references.", { items: { $ref: "#/components/schemas/SecretReference" }, type: "array" }), "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...protectedOperationParameters,
+          { $ref: "#/components/parameters/TargetPathId" },
+        ],
+        responses: {
+          "200": jsonResponse("Secret references.", {
+            items: { $ref: "#/components/schemas/SecretReference" },
+            type: "array",
+          }),
+          "401": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "List secret references",
         tags: ["Targets"],
       },
       post: {
         operationId: "createSecretReference",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/TargetPathId" }],
-        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { locatorHash: { pattern: "^[0-9a-f]{64}$", type: "string" }, name: { pattern: "^[a-z][a-z0-9_-]{2,63}$", type: "string" }, provider: { enum: ["aws", "azure", "gcp", "vault", "local"], type: "string" }, providerVersion: { type: "string" } }, required: ["name", "provider", "locatorHash"], type: "object" } } }, required: true },
-        responses: { "201": jsonResponse("Secret reference created.", { $ref: "#/components/schemas/SecretReference" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "409": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/TargetPathId" },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                additionalProperties: false,
+                properties: {
+                  locatorHash: { pattern: "^[0-9a-f]{64}$", type: "string" },
+                  name: { pattern: "^[a-z][a-z0-9_-]{2,63}$", type: "string" },
+                  provider: {
+                    enum: ["aws", "azure", "gcp", "vault", "local"],
+                    type: "string",
+                  },
+                  providerVersion: { type: "string" },
+                },
+                required: ["name", "provider", "locatorHash"],
+                type: "object",
+              },
+            },
+          },
+          required: true,
+        },
+        responses: {
+          "201": jsonResponse("Secret reference created.", {
+            $ref: "#/components/schemas/SecretReference",
+          }),
+          "400": { $ref: "#/components/responses/Problem" },
+          "401": { $ref: "#/components/responses/Problem" },
+          "409": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Create a secret reference",
         tags: ["Targets"],
       },
@@ -663,16 +1440,52 @@ export const openApiDocument = {
     "/v1/secret-references/{secretReferenceId}": {
       delete: {
         operationId: "deleteSecretReference",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/SecretReferencePathId" }],
-        responses: { "204": { description: "Secret reference deleted.", headers: { "X-Request-Id": requestIdHeader } }, "401": { $ref: "#/components/responses/Problem" }, "403": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/SecretReferencePathId" },
+        ],
+        responses: {
+          "204": {
+            description: "Secret reference deleted.",
+            headers: { "X-Request-Id": requestIdHeader },
+          },
+          "401": { $ref: "#/components/responses/Problem" },
+          "403": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Delete a secret reference",
         tags: ["Targets"],
       },
       patch: {
         operationId: "rotateSecretReference",
-        parameters: [...mutationOperationParameters, { $ref: "#/components/parameters/SecretReferencePathId" }],
-        requestBody: { content: { "application/json": { schema: { additionalProperties: false, properties: { locatorHash: { pattern: "^[0-9a-f]{64}$", type: "string" }, providerVersion: { type: "string" } }, required: ["locatorHash"], type: "object" } } }, required: true },
-        responses: { "200": jsonResponse("Secret reference rotated.", { $ref: "#/components/schemas/SecretReference" }), "400": { $ref: "#/components/responses/Problem" }, "401": { $ref: "#/components/responses/Problem" }, "404": { $ref: "#/components/responses/Problem" } },
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/SecretReferencePathId" },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                additionalProperties: false,
+                properties: {
+                  locatorHash: { pattern: "^[0-9a-f]{64}$", type: "string" },
+                  providerVersion: { type: "string" },
+                },
+                required: ["locatorHash"],
+                type: "object",
+              },
+            },
+          },
+          required: true,
+        },
+        responses: {
+          "200": jsonResponse("Secret reference rotated.", {
+            $ref: "#/components/schemas/SecretReference",
+          }),
+          "400": { $ref: "#/components/responses/Problem" },
+          "401": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+        },
         summary: "Rotate a secret reference",
         tags: ["Targets"],
       },
@@ -694,8 +1507,13 @@ export const openApiDocument = {
       name: "Projects",
     },
     {
-      description: "Verified endpoints, Stellar networks, assets, and corridors.",
+      description:
+        "Verified endpoints, Stellar networks, assets, and corridors.",
       name: "Targets",
+    },
+    {
+      description: "A constrained, durable SEP-1 reviewer workflow.",
+      name: "Reference runs",
     },
   ],
 } as const;

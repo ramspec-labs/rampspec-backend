@@ -753,6 +753,194 @@
         "pattern": "^request_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
         "type": "string"
       },
+      "ReferenceRunRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "probe": {
+            "additionalProperties": false,
+            "properties": {
+              "checkedAt": {
+                "$ref": "#/components/schemas/UtcTimestamp"
+              },
+              "headers": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "reachable": {
+                "type": "boolean"
+              },
+              "status": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "supportedSeps": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "checkedAt",
+              "headers",
+              "reachable",
+              "status",
+              "supportedSeps"
+            ],
+            "type": "object"
+          },
+          "report": {
+            "additionalProperties": false,
+            "properties": {
+              "evidenceManifestHash": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "findingIds": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "generatedAt": {
+                "$ref": "#/components/schemas/UtcTimestamp"
+              },
+              "reportId": {
+                "$ref": "#/components/schemas/ReportId"
+              },
+              "runId": {
+                "$ref": "#/components/schemas/RunId"
+              },
+              "summary": {
+                "additionalProperties": false,
+                "properties": {
+                  "failed": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "passed": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "skipped": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "warnings": {
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "failed",
+                  "passed",
+                  "skipped",
+                  "warnings"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "evidenceManifestHash",
+              "findingIds",
+              "generatedAt",
+              "reportId",
+              "runId",
+              "summary"
+            ],
+            "type": "object"
+          },
+          "run": {
+            "additionalProperties": false,
+            "properties": {
+              "createdAt": {
+                "$ref": "#/components/schemas/UtcTimestamp"
+              },
+              "effectiveConfig": {
+                "type": "object"
+              },
+              "effectiveConfigHash": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "id": {
+                "$ref": "#/components/schemas/RunId"
+              },
+              "idempotencyKey": {
+                "type": "string"
+              },
+              "organizationId": {
+                "$ref": "#/components/schemas/OrganizationId"
+              },
+              "projectId": {
+                "$ref": "#/components/schemas/ProjectId"
+              },
+              "state": {
+                "enum": [
+                  "completed",
+                  "failed"
+                ],
+                "type": "string"
+              },
+              "suiteId": {
+                "$ref": "#/components/schemas/SuiteId"
+              },
+              "suiteVersion": {
+                "type": "string"
+              },
+              "targetId": {
+                "$ref": "#/components/schemas/TargetId"
+              }
+            },
+            "required": [
+              "createdAt",
+              "effectiveConfig",
+              "effectiveConfigHash",
+              "id",
+              "idempotencyKey",
+              "organizationId",
+              "projectId",
+              "state",
+              "suiteId",
+              "suiteVersion",
+              "targetId"
+            ],
+            "type": "object"
+          },
+          "targetOrigin": {
+            "format": "uri",
+            "pattern": "^https://",
+            "type": "string"
+          }
+        },
+        "required": [
+          "probe",
+          "report",
+          "run",
+          "targetOrigin"
+        ],
+        "type": "object"
+      },
+      "ReportId": {
+        "pattern": "^report_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "RunId": {
+        "pattern": "^run_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "SuiteId": {
+        "pattern": "^suite_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        "type": "string"
+      },
       "UtcTimestamp": {
         "format": "date-time",
         "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
@@ -790,13 +978,22 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "persistence": {
+                      "const": "json-file",
+                      "type": "string"
+                    },
                     "status": {
                       "const": "ok",
+                      "type": "string"
+                    },
+                    "version": {
                       "type": "string"
                     }
                   },
                   "required": [
-                    "status"
+                    "persistence",
+                    "status",
+                    "version"
                   ],
                   "type": "object"
                 }
@@ -817,6 +1014,178 @@
         "summary": "Read service health",
         "tags": [
           "System"
+        ]
+      }
+    },
+    "/version": {
+      "get": {
+        "operationId": "getVersion",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "api": {
+                      "const": "v1",
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "api",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Service version.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Read service version",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/v1/reference-runs": {
+      "post": {
+        "operationId": "createReferenceRun",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "effectiveConfig": {
+                    "type": "object"
+                  },
+                  "projectId": {
+                    "$ref": "#/components/schemas/ProjectId"
+                  },
+                  "suiteId": {
+                    "$ref": "#/components/schemas/SuiteId"
+                  },
+                  "suiteVersion": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "targetId": {
+                    "$ref": "#/components/schemas/TargetId"
+                  },
+                  "targetOrigin": {
+                    "format": "uri",
+                    "pattern": "^https://",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "projectId",
+                  "suiteId",
+                  "suiteVersion",
+                  "targetId",
+                  "targetOrigin"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceRunRecord"
+                }
+              }
+            },
+            "description": "Reference run completed.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [],
+        "summary": "Run the public SEP-1 reference check",
+        "tags": [
+          "Reference runs"
+        ]
+      }
+    },
+    "/v1/reference-runs/{runId}": {
+      "get": {
+        "operationId": "getReferenceRun",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/RunId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceRunRecord"
+                }
+              }
+            },
+            "description": "Reference run and report.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [],
+        "summary": "Read a reference run",
+        "tags": [
+          "Reference runs"
         ]
       }
     },
@@ -2479,6 +2848,10 @@
     {
       "description": "Verified endpoints, Stellar networks, assets, and corridors.",
       "name": "Targets"
+    },
+    {
+      "description": "A constrained, durable SEP-1 reviewer workflow.",
+      "name": "Reference runs"
     }
   ]
 }

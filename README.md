@@ -28,6 +28,17 @@ pnpm check
 
 The workspace contains independently deployable applications under `apps/` and shared libraries under `packages/`. `pnpm verify:workspace` validates the expected package topology.
 
+### Reviewer reference API
+
+The API application includes a durable SEP-1 reference workflow that probes an approved HTTPS target, records the capability evidence, and returns a small report. Configure `.env.example`, then run:
+
+```shell
+pnpm build
+pnpm start:api
+```
+
+Production startup requires `RAMPSPEC_REFERENCE_TARGETS`, a comma-separated allowlist of target origins. Submit a run with `POST /v1/reference-runs`, supplying `Idempotency-Key` and `X-RampSpec-Organization`; read it again at `GET /v1/reference-runs/{runId}`. The generated OpenAPI document in `generated/openapi/openapi.json` is the canonical request and response reference.
+
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before contributing, [SECURITY.md](SECURITY.md) before reporting a vulnerability, and [governance/branch-and-release-policy.md](governance/branch-and-release-policy.md) before preparing a release.
 
 ## License

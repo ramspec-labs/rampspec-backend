@@ -7,6 +7,7 @@ import { openApiDocument } from "./openapi.js";
 
 const httpMethods = ["get", "post", "put", "patch", "delete"] as const;
 const mutationMethods = new Set(["post", "put", "patch", "delete"]);
+const publicPaths = new Set(["/health", "/version"]);
 
 describe("OpenAPI contract", () => {
   it("is a valid OpenAPI 3.1 document", async () => {
@@ -44,12 +45,14 @@ describe("OpenAPI contract", () => {
           ).toHaveProperty("X-Request-Id");
         }
 
-        if (path === "/health") continue;
+        if (publicPaths.has(path)) continue;
         expect(openApiDocument.security).toContainEqual({ bearerAuth: [] });
         const parameters = JSON.stringify(operation.parameters);
         const tenantless = path === "/v1/organizations";
         if (!tenantless)
-          expect(parameters).toContain("#/components/parameters/OrganizationId");
+          expect(parameters).toContain(
+            "#/components/parameters/OrganizationId",
+          );
         for (const [status, response] of Object.entries(responses)) {
           if (Number(status) >= 400) {
             expect(
