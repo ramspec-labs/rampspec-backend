@@ -12,7 +12,7 @@ COPY scripts ./scripts
 RUN pnpm install --frozen-lockfile
 RUN pnpm build
 
-FROM gcr.io/distroless/nodejs24-debian12:nonroot@sha256:14d42e2511532589a7c7e01a753667a74fcc96266e137e8125006b87b0c32d0a AS runtime
+FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:088a01637f22908632ba09018be2e0b516f2fa6f7869c191d29491139db43c78 AS runtime
 
 ENV NODE_ENV=production
 WORKDIR /app
