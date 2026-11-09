@@ -12,10 +12,10 @@ COPY scripts ./scripts
 RUN pnpm install --frozen-lockfile
 RUN pnpm build
 
-FROM node:24.21.0-bookworm-slim AS runtime
+FROM gcr.io/distroless/nodejs24-debian12:nonroot@sha256:14d42e2511532589a7c7e01a753667a74fcc96266e137e8125006b87b0c32d0a AS runtime
 
 ENV NODE_ENV=production
 WORKDIR /app
-COPY --from=build --chown=node:node /workspace/dist ./dist
-USER node
-CMD ["node", "dist/apps/api/src/index.js"]
+COPY --from=build --chown=nonroot:nonroot /workspace/dist ./dist
+USER nonroot
+CMD ["dist/apps/api/src/index.js"]
