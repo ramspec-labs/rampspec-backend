@@ -86,6 +86,14 @@
         "schema": {
           "$ref": "#/components/schemas/SecretReferenceId"
         }
+      },
+      "SessionPathId": {
+        "in": "path",
+        "name": "sessionId",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/SessionId"
+        }
       }
     },
     "responses": {
@@ -696,6 +704,37 @@
         ],
         "type": "object"
       },
+      "SessionId": {
+        "pattern": "^session_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "SessionRevocation": {
+        "additionalProperties": false,
+        "properties": {
+          "revokedAt": {
+            "$ref": "#/components/schemas/UtcTimestamp"
+          },
+          "sessionId": {
+            "$ref": "#/components/schemas/SessionId"
+          }
+        },
+        "required": [
+          "sessionId",
+          "revokedAt"
+        ],
+        "type": "object"
+      },
+      "SessionRevocationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "PageInfo": {
         "additionalProperties": false,
         "properties": {
@@ -759,14 +798,58 @@
           "probe": {
             "additionalProperties": false,
             "properties": {
+              "budgetExceeded": {
+                "type": "boolean"
+              },
               "checkedAt": {
                 "$ref": "#/components/schemas/UtcTimestamp"
               },
+              "contentType": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "contentTypeStatus": {
+                "enum": [
+                  "accepted",
+                  "malformed",
+                  "missing",
+                  "unsupported"
+                ],
+                "type": "string"
+              },
+              "contentTypeSupported": {
+                "type": "boolean"
+              },
+              "discoveryValid": {
+                "type": "boolean"
+              },
               "headers": {
                 "additionalProperties": {
+                  "maxLength": 4096,
                   "type": "string"
                 },
                 "type": "object"
+              },
+              "limitReason": {
+                "oneOf": [
+                  {
+                    "enum": [
+                      "content-length-budget-exceeded",
+                      "header-budget-exceeded",
+                      "response-budget-exceeded"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "reachable": {
                 "type": "boolean"
@@ -783,14 +866,22 @@
               },
               "supportedSeps": {
                 "items": {
+                  "maxLength": 4096,
                   "type": "string"
                 },
+                "maxItems": 32,
                 "type": "array"
               }
             },
             "required": [
+              "budgetExceeded",
               "checkedAt",
+              "contentType",
+              "contentTypeStatus",
+              "contentTypeSupported",
+              "discoveryValid",
               "headers",
+              "limitReason",
               "reachable",
               "status",
               "supportedSeps"
@@ -2577,6 +2668,68 @@
         ]
       }
     },
+    "/v1/sessions/{sessionId}": {
+      "delete": {
+        "operationId": "revokeSession",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/SessionPathId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionRevocationRequest"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionRevocation"
+                }
+              }
+            },
+            "description": "Session revoked.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Correlates the request across services and audit records.",
+                "schema": {
+                  "$ref": "#/components/schemas/RequestId"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "summary": "Revoke a session",
+        "tags": [
+          "Sessions"
+        ]
+      }
+    },
     "/v1/targets/{targetId}/secret-references": {
       "get": {
         "operationId": "listSecretReferences",
@@ -2836,6 +2989,10 @@
     {
       "description": "Service metadata and authenticated context.",
       "name": "System"
+    },
+    {
+      "description": "Web session lifecycle and revocation.",
+      "name": "Sessions"
     },
     {
       "description": "Tenant organizations and membership lifecycle.",

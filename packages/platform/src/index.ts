@@ -22,6 +22,7 @@ export * from "./runs/service.js";
 export * from "./runs/state-machine.js";
 export * from "./runs/attempts.js";
 export * from "./targets/probe.js";
+export * from "./execution/content-type.js";
 export * from "./execution/request.js";
 export * from "./execution/response.js";
 export * from "./evidence/capture.js";

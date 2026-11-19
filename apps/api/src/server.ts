@@ -182,6 +182,17 @@ export class ReferenceRunExecutor {
           id: "sep-1-advertised",
           status: supportsSep1 ? "pass" : "warning",
         },
+        // An over-budget probe is recorded as a classified finding carrying
+        // no response content: the partial response was discarded by the
+        // probe and never reaches logs or the evidence manifest.
+        ...(probe.budgetExceeded
+          ? [
+              {
+                id: "target-probe-response-bounded",
+                status: "fail" as const,
+              },
+            ]
+          : []),
       ],
       runId: run.id,
     });

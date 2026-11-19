@@ -1,0 +1,1 @@
+DROP TABLE rampspec.oidc_authorization_requests;

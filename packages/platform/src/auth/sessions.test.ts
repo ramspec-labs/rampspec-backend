@@ -188,6 +188,220 @@ describe("web identity sessions", () => {
     ).rejects.toThrow();
   });
 
+  it("revokes a selected session and rejects its subsequent use", async () => {
+    const auth = service();
+    const caller = await auth.exchange("caller-token", now);
+    const target = await auth.exchange("target-token", now);
+    await expect(
+      auth.revokeSession({
+        csrfToken: caller.csrfToken,
+        sessionToken: caller.sessionToken,
+        targetSessionId: target.sessionId,
+        now,
+      }),
+    ).resolves.toEqual({
+      revokedAt: "2026-09-12T18:00:00.000Z",
+      sessionId: target.sessionId,
+    });
+    await expect(
+      auth.authenticate(target.sessionToken, { method: "GET", now }),
+    ).rejects.toThrow("invalid or expired");
+    const tokenHash = createHash("sha256")
+      .update(target.sessionToken, "utf8")
+      .digest("hex");
+    const persisted = await store.findByTokenHash(tokenHash);
+    expect(persisted).toMatchObject({
+      revokedAt: "2026-09-12T18:00:00.000Z",
+      revokeReason: "user_revoked",
+    });
+    expect(events).toContainEqual({
+      action: "session.revoked",
+      reason: "user_revoked",
+      sessionId: target.sessionId,
+      userId: "user_synthetic",
+    });
+  });
+
+  it("revokes the caller's own session", async () => {
+    const auth = service();
+    const credentials = await auth.exchange("own-token", now);
+    await expect(
+      auth.revokeSession({
+        csrfToken: credentials.csrfToken,
+        sessionToken: credentials.sessionToken,
+        targetSessionId: credentials.sessionId,
+        now,
+      }),
+    ).resolves.toMatchObject({ sessionId: credentials.sessionId });
+    await expect(
+      auth.authenticate(credentials.sessionToken, { method: "GET", now }),
+    ).rejects.toThrow("invalid or expired");
+  });
+
+  it("revokes idempotently and audits only the first revocation", async () => {
+    const auth = service();
+    const caller = await auth.exchange("caller-token", now);
+    const target = await auth.exchange("target-token", now);
+    const first = await auth.revokeSession({
+      csrfToken: caller.csrfToken,
+      sessionToken: caller.sessionToken,
+      targetSessionId: target.sessionId,
+      now,
+    });
+    const second = await auth.revokeSession({
+      csrfToken: caller.csrfToken,
+      sessionToken: caller.sessionToken,
+      targetSessionId: target.sessionId,
+      now: new Date(now.getTime() + 1000),
+    });
+    expect(second).toEqual(first);
+    expect(
+      events.filter((event) => event.action === "session.revoked"),
+    ).toHaveLength(1);
+  });
+
+  it("returns the same not-found error for unknown, malformed, and foreign sessions", async () => {
+    const auth = service();
+    const caller = await auth.exchange("caller-token", now);
+    const other = new SessionService({
+      audit: {
+        record: (event) => {
+          events.push(event);
+          return Promise.resolve();
+        },
+      },
+      identityResolver: { resolve: () => Promise.resolve("user_other") },
+      sessionTtlSeconds: 900,
+      store,
+      verifier: new FakeVerifier(),
+    });
+    const foreign = await other.exchange("foreign-token", now);
+    const expected = {
+      code: "session-not-found",
+      status: 404,
+    };
+    await expect(
+      auth.revokeSession({
+        csrfToken: caller.csrfToken,
+        sessionToken: caller.sessionToken,
+        targetSessionId: "session_00000000-0000-4000-8000-000000000000",
+        now,
+      }),
+    ).rejects.toMatchObject(expected);
+    await expect(
+      auth.revokeSession({
+        csrfToken: caller.csrfToken,
+        sessionToken: caller.sessionToken,
+        targetSessionId: "not-a-session-id",
+        now,
+      }),
+    ).rejects.toMatchObject(expected);
+    await expect(
+      auth.revokeSession({
+        csrfToken: caller.csrfToken,
+        sessionToken: caller.sessionToken,
+        targetSessionId: foreign.sessionId,
+        now,
+      }),
+    ).rejects.toMatchObject(expected);
+    expect(
+      events.filter((event) => event.action === "session.revoked"),
+    ).toHaveLength(0);
+    await expect(
+      other.authenticate(foreign.sessionToken, { method: "GET", now }),
+    ).resolves.toMatchObject({ userId: "user_other" });
+  });
+
+  it("requires authentication and CSRF to revoke a session", async () => {
+    const auth = service();
+    const caller = await auth.exchange("caller-token", now);
+    const target = await auth.exchange("target-token", now);
+    await expect(
+      auth.revokeSession({
+        csrfToken: caller.csrfToken,
+        sessionToken: "rss_invalid",
+        targetSessionId: target.sessionId,
+        now,
+      }),
+    ).rejects.toMatchObject({
+      code: "authentication-required",
+      status: 401,
+    });
+    await expect(
+      auth.revokeSession({
+        csrfToken: "",
+        sessionToken: caller.sessionToken,
+        targetSessionId: target.sessionId,
+        now,
+      }),
+    ).rejects.toMatchObject({ code: "csrf-check-failed", status: 403 });
+    await expect(
+      auth.authenticate(target.sessionToken, { method: "GET", now }),
+    ).resolves.toMatchObject({ userId: "user_synthetic" });
+  });
+
+  it("bounds the revocation reason", async () => {
+    const auth = service();
+    const caller = await auth.exchange("caller-token", now);
+    const first = await auth.exchange("first-token", now);
+    const second = await auth.exchange("second-token", now);
+    await expect(
+      auth.revokeSession({
+        csrfToken: caller.csrfToken,
+        reason: "r".repeat(128),
+        sessionToken: caller.sessionToken,
+        targetSessionId: first.sessionId,
+        now,
+      }),
+    ).resolves.toMatchObject({ sessionId: first.sessionId });
+    await expect(
+      auth.revokeSession({
+        csrfToken: caller.csrfToken,
+        reason: "r".repeat(129),
+        sessionToken: caller.sessionToken,
+        targetSessionId: second.sessionId,
+        now,
+      }),
+    ).rejects.toMatchObject({
+      code: "invalid-revocation-reason",
+      status: 400,
+    });
+    await expect(
+      auth.revokeSession({
+        csrfToken: caller.csrfToken,
+        reason: "",
+        sessionToken: caller.sessionToken,
+        targetSessionId: second.sessionId,
+        now,
+      }),
+    ).rejects.toMatchObject({
+      code: "invalid-revocation-reason",
+      status: 400,
+    });
+    await expect(
+      auth.authenticate(second.sessionToken, { method: "GET", now }),
+    ).resolves.toMatchObject({ userId: "user_synthetic" });
+  });
+
+  it("leaves the caller's other sessions usable after a revocation", async () => {
+    const auth = service();
+    const caller = await auth.exchange("caller-token", now);
+    const target = await auth.exchange("target-token", now);
+    const other = await auth.exchange("other-token", now);
+    await auth.revokeSession({
+      csrfToken: caller.csrfToken,
+      sessionToken: caller.sessionToken,
+      targetSessionId: target.sessionId,
+      now,
+    });
+    await expect(
+      auth.authenticate(caller.sessionToken, { method: "GET", now }),
+    ).resolves.toMatchObject({ sessionId: caller.sessionId });
+    await expect(
+      auth.authenticate(other.sessionToken, { method: "GET", now }),
+    ).resolves.toMatchObject({ sessionId: other.sessionId });
+  });
+
   it("enforces optional MFA and maps provider failures without sensitive audit data", async () => {
     const noMfa = {
       ...claims,
@@ -272,5 +486,10 @@ describe("web identity sessions", () => {
     expect(sql).not.toMatch(
       /id_token|access_token|refresh_token|token_value/iu,
     );
+    // Revocation by session identifier needs no new migration: the table
+    // already keys sessions by id and carries the revocation columns.
+    expect(sql).toContain("id text PRIMARY KEY");
+    expect(sql).toContain("revoked_at timestamptz");
+    expect(sql).toContain("revoke_reason text");
   });
 });

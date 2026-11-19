@@ -26,6 +26,35 @@ describe("OpenAPI contract", () => {
     expect(generated).toEqual(openApiDocument);
   });
 
+  it("documents the session revocation endpoint", () => {
+    const operation = openApiDocument.paths["/v1/sessions/{sessionId}"]
+      .delete as Record<string, unknown>;
+    expect(operation.operationId).toBe("revokeSession");
+    expect(operation.tags).toContain("Sessions");
+    const parameters = JSON.stringify(operation.parameters);
+    expect(parameters).toContain("#/components/parameters/OrganizationId");
+    expect(parameters).toContain("#/components/parameters/IdempotencyKey");
+    expect(parameters).toContain("#/components/parameters/SessionPathId");
+    expect(openApiDocument.components.schemas.SessionId.pattern).toBe(
+      "^session_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+    );
+    expect(
+      openApiDocument.components.schemas.SessionRevocation.required,
+    ).toEqual(["sessionId", "revokedAt"]);
+    expect(
+      openApiDocument.components.schemas.SessionRevocationRequest.properties
+        .reason.maxLength,
+    ).toBe(128);
+    const responses = operation.responses as Record<string, unknown>;
+    expect(Object.keys(responses).sort()).toEqual([
+      "200",
+      "400",
+      "401",
+      "403",
+      "404",
+    ]);
+  });
+
   it("enforces tenant, request ID, problem, and mutation conventions", () => {
     for (const [path, pathItem] of Object.entries(openApiDocument.paths)) {
       for (const method of httpMethods) {
