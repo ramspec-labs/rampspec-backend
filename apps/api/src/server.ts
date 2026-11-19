@@ -17,6 +17,7 @@ import {
   type CapabilityProbe,
   type GeneratedReport,
   type Run,
+  type RunClaim,
   type RunRepository,
 } from "../../../packages/platform/src/index.js";
 
@@ -63,6 +64,28 @@ export class JsonRunRepository implements RunRepository {
     return (await this.read()).find((record) => record.run.id === runId);
   }
 
+  /**
+   * Atomically claim a run for (organizationId, idempotencyKey). The lookup
+   * and the append run inside one serialized file mutation, so concurrent
+   * callers in this process receive the original run instead of creating a
+   * duplicate. Across processes the file store has no lock: two processes
+   * can both read before either writes, and the later write wins. The
+   * PostgreSQL store is the cross-process arbiter there, via
+   * UNIQUE (organization_id, idempotency_key) on rampspec.runs.
+   */
+  public claim(run: Run): Promise<RunClaim> {
+    return this.mutateWithResult((records) => {
+      const existing = records.find(
+        (record) =>
+          record.run.organizationId === run.organizationId &&
+          record.run.idempotencyKey === run.idempotencyKey,
+      );
+      if (existing) return { created: false, run: existing.run };
+      records.push({ run, targetOrigin: "pending" });
+      return { created: true, run };
+    });
+  }
+
   public insert(run: Run): Promise<void> {
     return this.mutate((records) => {
       if (!records.some((record) => record.run.id === run.id)) {
@@ -94,9 +117,17 @@ export class JsonRunRepository implements RunRepository {
   private mutate(
     action: (records: ReferenceRunRecord[]) => void,
   ): Promise<void> {
+    return this.mutateWithResult((records) => {
+      action(records);
+    });
+  }
+
+  private mutateWithResult<T>(
+    action: (records: ReferenceRunRecord[]) => T,
+  ): Promise<T> {
     const operation = this.pending.then(async () => {
       const records = await this.read();
-      action(records);
+      const result = action(records);
       await mkdir(dirname(this.filePath), { recursive: true });
       const temporary = `${this.filePath}.${process.pid}.${randomUUID()}.tmp`;
       await writeFile(
@@ -105,8 +136,12 @@ export class JsonRunRepository implements RunRepository {
         "utf8",
       );
       await rename(temporary, this.filePath);
+      return result;
     });
-    this.pending = operation.catch(() => undefined);
+    this.pending = operation.then(
+      () => undefined,
+      () => undefined,
+    );
     return operation;
   }
 }

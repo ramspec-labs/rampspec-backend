@@ -59,6 +59,7 @@ const configSchema = z.object({
     .regex(/^[\w.-]+:\d{1,5}$/u, "Expected a Temporal host and port.")
     .optional(),
   TEMPORAL_NAMESPACE: z.string().min(1).optional(),
+  WEBHOOK_SIGNING_SECRET_REF: secretReference.optional(),
 });
 
 type RuntimeConfig = z.infer<typeof configSchema>;
@@ -136,6 +137,7 @@ const requiredByApplication: Readonly<
     "REDIS_URL",
     "TEMPORAL_ADDRESS",
     "TEMPORAL_NAMESPACE",
+    "WEBHOOK_SIGNING_SECRET_REF",
   ],
   workflow: [
     "DATABASE_URL",
@@ -168,6 +170,7 @@ const managedPrefixes = [
   "RUNNER_",
   "STELLAR_",
   "TEMPORAL_",
+  "WEBHOOK_",
 ] as const;
 
 const prohibitedSecretKeys = new Set([

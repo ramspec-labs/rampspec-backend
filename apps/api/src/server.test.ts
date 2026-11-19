@@ -98,6 +98,49 @@ describe("reference run API", () => {
     ).toBeUndefined();
   });
 
+  it("claims a run atomically across repository instances", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "rampspec-api-"));
+    directories.push(directory);
+    const file = join(directory, "runs.json");
+    const clock = () => new Date("2026-11-09T16:00:00.000Z");
+    const first = new JsonRunRepository(file);
+    const run = await new ReferenceRunExecutor(first, {
+      allowedOrigins: ["https://anchor.example"],
+      clock,
+      fetcher: () =>
+        Promise.resolve(
+          new Response(null, {
+            headers: { "x-stellar-toml-version": "SEP-0001" },
+            status: 200,
+          }),
+        ),
+    }).execute(ids.organization, "reviewer-reference-run-0004", {
+      projectId: ids.project,
+      suiteId: ids.suite,
+      suiteVersion: "1.0.0",
+      targetId: ids.target,
+      targetOrigin: "https://anchor.example",
+    });
+    expect(run.run.idempotencyKey).toBe("reviewer-reference-run-0004");
+
+    // A second instance (restarted process) claiming the same key receives
+    // the original run instead of creating a duplicate.
+    const restarted = new JsonRunRepository(file);
+    const duplicate = await restarted.claim(run.run);
+    expect(duplicate.created).toBe(false);
+    expect(duplicate.run.id).toBe(run.run.id);
+
+    // Concurrent claims inside one instance also resolve to one run.
+    const concurrent = new JsonRunRepository(file);
+    const [one, two] = await Promise.all([
+      concurrent.claim(run.run),
+      concurrent.claim(run.run),
+    ]);
+    expect(one.run.id).toBe(run.run.id);
+    expect(two.run.id).toBe(run.run.id);
+    expect([one.created, two.created].filter(Boolean)).toHaveLength(0);
+  });
+
   it("rejects insecure targets and oversized trust assumptions", async () => {
     const directory = await mkdtemp(join(tmpdir(), "rampspec-api-"));
     directories.push(directory);

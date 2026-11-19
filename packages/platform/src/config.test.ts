@@ -35,6 +35,7 @@ function validEnvironment(
     STELLAR_RPC_URL: "https://soroban-testnet.stellar.org",
     TEMPORAL_ADDRESS: "temporal.example.test:7233",
     TEMPORAL_NAMESPACE: "rampspec-test",
+    WEBHOOK_SIGNING_SECRET_REF: "vault://webhooks/signing-secret",
   };
 }
 
@@ -52,7 +53,7 @@ describe("application configuration", () => {
     gateway: "OIDC_ISSUER",
     report: "OBJECT_STORAGE_BUCKET",
     scheduler: "REDIS_URL",
-    webhook: "APP_PORT",
+    webhook: "WEBHOOK_SIGNING_SECRET_REF",
     workflow: "TEMPORAL_NAMESPACE",
   } as const;
 
