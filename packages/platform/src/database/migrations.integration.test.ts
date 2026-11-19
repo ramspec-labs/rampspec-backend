@@ -232,6 +232,73 @@ describeDatabase("PostgreSQL migration integration", () => {
     ).rejects.toMatchObject({ code: "23514" });
   });
 
+  it("enforces ownership challenge lifetime at the storage boundary", async () => {
+    const organizationId = "organization_00000000-0000-4000-8000-000000000012";
+    const targetId = "target_00000000-0000-4000-8000-000000000021";
+    await pool.query(
+      "SELECT set_config('rampspec.organization_id', $1, false)",
+      [organizationId],
+    );
+    await pool.query(
+      `INSERT INTO rampspec.target_verifications
+         (id, organization_id, target_id, method, status, expires_at)
+       VALUES ('verification_00000000-0000-4000-8000-000000000050', $1, $2,
+               'dns_txt', 'pending', now() + interval '1 hour')`,
+      [organizationId, targetId],
+    );
+    await expect(
+      pool.query(
+        `INSERT INTO rampspec.target_verifications
+           (id, organization_id, target_id, method, status, expires_at)
+         VALUES ('verification_00000000-0000-4000-8000-000000000051', $1, $2,
+                 'dns_txt', 'pending', now() + interval '1 hour')`,
+        [organizationId, targetId],
+      ),
+    ).rejects.toMatchObject({ code: "23505" });
+    await expect(
+      pool.query(
+        `INSERT INTO rampspec.target_verifications
+           (id, organization_id, target_id, method, status, expires_at)
+         VALUES ('verification_00000000-0000-4000-8000-000000000052', $1, $2,
+                 'well_known', 'pending', now() + interval '1 hour')`,
+        [organizationId, targetId],
+      ),
+    ).resolves.toMatchObject({ rowCount: 1 });
+    await expect(
+      pool.query(
+        `INSERT INTO rampspec.target_verifications
+           (id, organization_id, target_id, method, status, expires_at,
+            verified_at)
+         VALUES ('verification_00000000-0000-4000-8000-000000000053', $1, $2,
+                 'dns_txt', 'verified', now() + interval '1 hour',
+                 now() + interval '2 hours')`,
+        [organizationId, targetId],
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query(
+        `INSERT INTO rampspec.target_verifications
+           (id, organization_id, target_id, method, status, expires_at,
+            verified_at)
+         VALUES ('verification_00000000-0000-4000-8000-000000000054', $1, $2,
+                 'dns_txt', 'verified', now() + interval '1 hour', now())`,
+        [organizationId, targetId],
+      ),
+    ).resolves.toMatchObject({ rowCount: 1 });
+
+    const indexes = await pool.query<{ readonly indexname: string }>(
+      `SELECT indexname FROM pg_indexes
+       WHERE schemaname = 'rampspec' AND tablename = 'target_verifications'
+       ORDER BY indexname`,
+    );
+    expect(indexes.rows.map(({ indexname }) => indexname)).toEqual(
+      expect.arrayContaining([
+        "target_verifications_one_pending_idx",
+        "target_verifications_pending_expiry_idx",
+      ]),
+    );
+  });
+
   it("keeps imported snapshots and published rule packs immutable", async () => {
     const organizationId = "organization_00000000-0000-4000-8000-000000000012";
     const snapshotId = "spec_snapshot_00000000-0000-4000-8000-000000000030";

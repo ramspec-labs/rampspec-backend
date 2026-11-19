@@ -594,6 +594,78 @@ export const openApiDocument = {
           "^run_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
         type: "string",
       },
+      SchedulerLease: {
+        additionalProperties: false,
+        description:
+          "Exclusive ownership of a schedule for the duration of one job. Renewal is compare-and-set on ownerId, token, and version: a renewal succeeds only while the stored lease still carries the same owner, token, and version and has not expired. A renewal that matches no row means the lease expired, was released, or was taken over, and the caller must stop its work without emitting a completion event. The token is an ownership credential: present it on renewal and release, and never log it.",
+        properties: {
+          acquiredAt: { $ref: "#/components/schemas/UtcTimestamp" },
+          expiresAt: { $ref: "#/components/schemas/UtcTimestamp" },
+          organizationId: { $ref: "#/components/schemas/OrganizationId" },
+          ownerId: {
+            description: "Scheduler instance holding the lease.",
+            maxLength: 128,
+            minLength: 1,
+            type: "string",
+          },
+          renewalCount: {
+            description: "Successful renewals applied to this lease.",
+            minimum: 0,
+            type: "integer",
+          },
+          renewedAt: {
+            oneOf: [
+              { $ref: "#/components/schemas/UtcTimestamp" },
+              { type: "null" },
+            ],
+          },
+          scheduleId: { type: "string" },
+          token: {
+            description:
+              "Opaque ownership token issued at acquisition. Renewals keep the same token; the version advances instead.",
+            maxLength: 128,
+            minLength: 1,
+            type: "string",
+          },
+          version: {
+            description:
+              "Monotonic lease version, incremented by every successful renewal. Compare-and-set renewals and releases must present the current version.",
+            minimum: 1,
+            type: "integer",
+          },
+        },
+        required: [
+          "acquiredAt",
+          "expiresAt",
+          "organizationId",
+          "ownerId",
+          "renewalCount",
+          "scheduleId",
+          "token",
+          "version",
+        ],
+        type: "object",
+      },
+      SchedulerLeaseRenewal: {
+        additionalProperties: false,
+        description:
+          "Outcome of a compare-and-set lease renewal. When renewed is false, reason explains the failure: expired means the lease lapsed before renewal, not_found means no lease exists for the schedule, ownership_changed means another scheduler owns the lease, and stale_token means the token belongs to a previous lease generation.",
+        properties: {
+          lease: {
+            oneOf: [
+              { $ref: "#/components/schemas/SchedulerLease" },
+              { type: "null" },
+            ],
+          },
+          reason: {
+            enum: ["expired", "not_found", "ownership_changed", "stale_token"],
+            type: "string",
+          },
+          renewed: { type: "boolean" },
+        },
+        required: ["renewed"],
+        type: "object",
+      },
       SuiteId: {
         pattern:
           "^suite_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
@@ -1346,6 +1418,8 @@ export const openApiDocument = {
         tags: ["Targets"],
       },
       post: {
+        description:
+          "A proof presented at exactly expiresAt is expired: the challenge lifetime is exclusive.",
         operationId: "verifyOwnershipChallenge",
         parameters: [
           ...mutationOperationParameters,
@@ -1377,6 +1451,50 @@ export const openApiDocument = {
           "404": { $ref: "#/components/responses/Problem" },
         },
         summary: "Verify an ownership challenge",
+        tags: ["Targets"],
+      },
+    },
+    "/v1/ownership-challenges/{verificationId}/renew": {
+      post: {
+        description:
+          "Issues a fresh challenge and token for the same target and method and moves the previous challenge to a terminal state. The previous token is never usable again.",
+        operationId: "renewOwnershipChallenge",
+        parameters: [
+          ...mutationOperationParameters,
+          { $ref: "#/components/parameters/VerificationPathId" },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                additionalProperties: false,
+                properties: {
+                  ttlSeconds: { maximum: 86400, minimum: 60, type: "integer" },
+                },
+                type: "object",
+              },
+            },
+          },
+          required: false,
+        },
+        responses: {
+          "201": jsonResponse("Ownership challenge renewed.", {
+            additionalProperties: false,
+            properties: {
+              challenge: { $ref: "#/components/schemas/OwnershipChallenge" },
+              previous: { $ref: "#/components/schemas/OwnershipChallenge" },
+              token: { minLength: 1, type: "string" },
+            },
+            required: ["challenge", "previous", "token"],
+            type: "object",
+          }),
+          "400": { $ref: "#/components/responses/Problem" },
+          "401": { $ref: "#/components/responses/Problem" },
+          "403": { $ref: "#/components/responses/Problem" },
+          "404": { $ref: "#/components/responses/Problem" },
+          "409": { $ref: "#/components/responses/Problem" },
+        },
+        summary: "Renew an ownership challenge",
         tags: ["Targets"],
       },
     },
