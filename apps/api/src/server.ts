@@ -11,11 +11,13 @@ import { pathToFileURL } from "node:url";
 
 import type { OpaqueId } from "../../../packages/domain/src/index.js";
 import {
+  defaultMetrics,
   generateReport,
   probeTarget,
   RunService,
   type CapabilityProbe,
   type GeneratedReport,
+  type Metrics,
   type Run,
   type RunRepository,
 } from "../../../packages/platform/src/index.js";
@@ -244,7 +246,11 @@ function requireString(record: Record<string, unknown>, key: string): string {
   return value;
 }
 
-export function createApiHandler(executor: ReferenceRunExecutor) {
+export function createApiHandler(
+  executor: ReferenceRunExecutor,
+  options: { readonly metrics?: Metrics; readonly metricsSecret?: string } = {},
+) {
+  const metrics = options.metrics ?? defaultMetrics;
   return async (
     request: IncomingMessage,
     response: ServerResponse,
@@ -258,6 +264,7 @@ export function createApiHandler(executor: ReferenceRunExecutor) {
         return;
       }
       if (request.method === "GET" && url.pathname === "/health") {
+        metrics.increment("http_requests_total", { endpoint: "health", status: "200" });
         sendJson(response, 200, {
           persistence: "json-file",
           status: "ok",
@@ -266,10 +273,42 @@ export function createApiHandler(executor: ReferenceRunExecutor) {
         return;
       }
       if (request.method === "GET" && url.pathname === "/version") {
+        metrics.increment("http_requests_total", { endpoint: "version", status: "200" });
         sendJson(response, 200, { api: "v1", version });
         return;
       }
+      if (request.method === "GET" && url.pathname === "/metrics") {
+        const requiredSecret =
+          options.metricsSecret ?? process.env.RAMPSPEC_METRICS_TOKEN;
+        if (requiredSecret) {
+          const authHeader = request.headers.authorization;
+          const token = authHeader?.startsWith("Bearer ")
+            ? authHeader.slice(7).trim()
+            : request.headers["x-metrics-key"];
+          if (token !== requiredSecret) {
+            response.statusCode = 401;
+            response.setHeader("Content-Type", "application/json; charset=utf-8");
+            response.end(
+              JSON.stringify({
+                detail: "Unauthorized metrics scrape.",
+                status: 401,
+                title: "Unauthorized",
+              }) + "\n",
+            );
+            return;
+          }
+        }
+        metrics.increment("metrics_scrapes_total");
+        response.statusCode = 200;
+        response.setHeader(
+          "Content-Type",
+          "text/plain; version=0.0.4; charset=utf-8",
+        );
+        response.end(metrics.toPrometheusText());
+        return;
+      }
       if (request.method === "POST" && url.pathname === "/v1/reference-runs") {
+        metrics.increment("api_requests_total", { operation: "reference_runs_create" });
         const body = await readJson(request);
         if (!body || typeof body !== "object" || Array.isArray(body))
           throw new Error("JSON object required.");
@@ -329,6 +368,8 @@ export async function startApiServer(
     readonly executor?: ReferenceRunExecutor;
     readonly host?: string;
     readonly port?: number;
+    readonly metrics?: Metrics;
+    readonly metricsSecret?: string;
   } = {},
 ): Promise<{ readonly server: Server; readonly url: string }> {
   const repository = new JsonRunRepository(
@@ -352,6 +393,10 @@ export async function startApiServer(
       new ReferenceRunExecutor(repository, {
         ...(allowedOrigins.length > 0 ? { allowedOrigins } : {}),
       }),
+    {
+      ...(options.metrics ? { metrics: options.metrics } : {}),
+      ...(options.metricsSecret ? { metricsSecret: options.metricsSecret } : {}),
+    },
   );
   const server = createServer((request, response) => {
     void handler(request, response);

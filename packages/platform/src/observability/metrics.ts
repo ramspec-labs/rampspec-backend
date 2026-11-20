@@ -100,3 +100,5 @@ export class Metrics {
     return lines.join("\n") + (lines.length > 0 ? "\n" : "");
   }
 }
+
+export const defaultMetrics = new Metrics();
