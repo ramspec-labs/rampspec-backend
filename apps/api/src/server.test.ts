@@ -154,4 +154,38 @@ describe("reference run API", () => {
       detail: "Target origin is not approved for reference runs.",
     });
   });
+
+  it("exposes Prometheus metrics endpoint with protection and low cardinality", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "rampspec-api-"));
+    directories.push(directory);
+    const started = await startApiServer({
+      dataFile: join(directory, "runs.json"),
+      metricsSecret: "test-metrics-token",
+      port: 0,
+    });
+    servers.push(started.server);
+
+    // Unauthenticated request should be rejected when secret is configured
+    const unauthResponse = await fetch(`${started.url}/metrics`);
+    expect(unauthResponse.status).toBe(401);
+
+    // Authenticated request with Bearer token
+    const authResponse = await fetch(`${started.url}/metrics`, {
+      headers: {
+        Authorization: "Bearer test-metrics-token",
+      },
+    });
+    expect(authResponse.status).toBe(200);
+    expect(authResponse.headers.get("content-type")).toContain("text/plain");
+    const body = await authResponse.text();
+    expect(body).toContain("metrics_scrapes_total");
+
+    // Authenticated request with X-Metrics-Key header
+    const keyResponse = await fetch(`${started.url}/metrics`, {
+      headers: {
+        "x-metrics-key": "test-metrics-token",
+      },
+    });
+    expect(keyResponse.status).toBe(200);
+  });
 });
