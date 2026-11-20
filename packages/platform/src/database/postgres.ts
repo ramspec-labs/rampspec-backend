@@ -41,11 +41,34 @@ interface AppliedRow extends QueryResultRow {
   readonly version: string;
 }
 
+export interface PoolHealthMetrics {
+  readonly totalCount: number;
+  readonly idleCount: number;
+  readonly waitingCount: number;
+  readonly activeCount: number;
+  readonly timeouts: number;
+}
+
 export class PostgresMigrationRunner {
   private readonly pool: Pool;
+  private timeoutsCount = 0;
 
   constructor(connectionString: string) {
     this.pool = new Pool({ connectionString, max: 4 });
+  }
+
+  public getPoolMetrics(): PoolHealthMetrics {
+    const totalCount = this.pool.totalCount;
+    const idleCount = this.pool.idleCount;
+    const waitingCount = this.pool.waitingCount;
+    const activeCount = Math.max(0, totalCount - idleCount);
+    return Object.freeze({
+      totalCount,
+      idleCount,
+      waitingCount,
+      activeCount,
+      timeouts: this.timeoutsCount,
+    });
   }
 
   async close(): Promise<void> {
