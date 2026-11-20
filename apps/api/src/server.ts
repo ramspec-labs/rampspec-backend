@@ -13,6 +13,8 @@ import type { OpaqueId } from "../../../packages/domain/src/index.js";
 import {
   generateReport,
   probeTarget,
+  QuotaExceededError,
+  RunQuotaManager,
   RunService,
   type CapabilityProbe,
   type GeneratedReport,
@@ -113,6 +115,7 @@ export class JsonRunRepository implements RunRepository {
 
 export class ReferenceRunExecutor {
   private readonly runs: RunService;
+  private readonly quotaManager: RunQuotaManager;
 
   public constructor(
     private readonly repository: JsonRunRepository,
@@ -120,10 +123,22 @@ export class ReferenceRunExecutor {
       readonly allowedOrigins?: readonly string[];
       readonly clock?: () => Date;
       readonly fetcher?: typeof fetch;
+      readonly quotaManager?: RunQuotaManager;
     } = {},
   ) {
+    // Default quota: 10 concurrent runs, 100 runs per minute per tenant
+    this.quotaManager =
+      options.quotaManager ??
+      new RunQuotaManager({
+        concurrentLimit: 10,
+        windowedLimit: 100,
+        windowMs: 60_000,
+        ...(options.clock ? { clock: options.clock } : {}),
+      });
+
     this.runs = new RunService({
       repository,
+      quotaManager: this.quotaManager,
       ...(options.clock ? { clock: options.clock } : {}),
     });
   }
@@ -297,23 +312,48 @@ export function createApiHandler(executor: ReferenceRunExecutor) {
         sendJson(response, 201, result);
         return;
       }
-      const match = /^\/v1\/reference-runs\/(run_[0-9a-f-]+)$/u.exec(
+      const runMatch = /^\/v1\/reference-runs\/(run_[0-9a-f-]+)(?:\/status)?$/u.exec(
         url.pathname,
       );
-      if (request.method === "GET" && match?.[1]) {
+      if (request.method === "GET" && runMatch?.[1]) {
         const organizationId = request.headers["x-rampspec-organization"];
         if (typeof organizationId !== "string")
           throw new Error("X-RampSpec-Organization is required.");
-        const record = await executor.find(organizationId, match[1]);
+        const record = await executor.find(organizationId, runMatch[1]);
         if (!record) {
           sendJson(response, 404, { status: 404, title: "Run not found" });
           return;
         }
-        sendJson(response, 200, record);
+        const isStatusRequest = url.pathname.endsWith("/status");
+        if (isStatusRequest) {
+          const status = {
+            id: record.run.id,
+            state: record.run.state,
+            createdAt: record.run.createdAt,
+            ...(record.run.state === "completed" || record.run.state === "failed"
+              ? { completedAt: record.report?.createdAt || record.run.createdAt }
+              : {}),
+          };
+          sendJson(response, 200, status);
+        } else {
+          sendJson(response, 200, record);
+        }
         return;
       }
       sendJson(response, 404, { status: 404, title: "Route not found" });
     } catch (error) {
+      if (error instanceof QuotaExceededError) {
+        response.setHeader("Retry-After", error.retryAfterSeconds.toString());
+        sendJson(response, error.status, {
+          code: error.code,
+          detail: error.message,
+          retryAfterSeconds: error.retryAfterSeconds,
+          status: error.status,
+          title: `${error.type} quota exceeded`,
+          type: `https://rampspec.dev/problems/quota-exceeded-${error.type}`,
+        });
+        return;
+      }
       sendJson(response, 400, {
         detail: error instanceof Error ? error.message : "Invalid request.",
         status: 400,

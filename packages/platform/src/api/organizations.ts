@@ -1,9 +1,16 @@
 import { createId, parseId, type OpaqueId } from "../../../domain/src/index.js";
 
+export interface RunQuotaPolicy {
+  readonly concurrentLimit: number;
+  readonly windowedLimit: number;
+  readonly windowMs: number;
+}
+
 export interface OrganizationPolicy {
   readonly allowPubnet: boolean;
   readonly evidenceRetentionDays: number;
   readonly reportSigningKeyRef?: string;
+  readonly runQuotaPolicy?: RunQuotaPolicy;
 }
 
 export interface Organization {

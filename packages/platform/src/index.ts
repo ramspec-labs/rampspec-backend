@@ -40,6 +40,7 @@ export * from "./observability/metrics.js";
 export * from "./operations/health.js";
 export * from "./operations/backup.js";
 export * from "./operations/retention.js";
+export * from "./operations/reference-run-cleanup.js";
 export * from "./auth/sessions.js";
 export * from "./database/migrations.js";
 export * from "./database/postgres.js";
