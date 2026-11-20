@@ -92,6 +92,58 @@
       "Problem": {
         "content": {
           "application/problem+json": {
+            "examples": {
+              "authorization": {
+                "description": "The actor does not have required permissions.",
+                "summary": "Authorization error",
+                "value": {
+                  "detail": "The actor is not authorized for this operation.",
+                  "instance": "/v1/projects/project_00000000-0000-4000-8000-000000000001",
+                  "reason": "role_missing",
+                  "requestId": "request_00000000-0000-4000-8000-000000000002",
+                  "status": 403,
+                  "title": "Access Denied",
+                  "type": "https://rampspec.dev/problems/access-denied"
+                }
+              },
+              "conflict": {
+                "description": "State conflict or duplicate resource.",
+                "summary": "Conflict error",
+                "value": {
+                  "detail": "Resource with the given identifier already exists.",
+                  "instance": "/v1/organizations",
+                  "requestId": "request_00000000-0000-4000-8000-000000000003",
+                  "status": 409,
+                  "title": "Conflict",
+                  "type": "https://rampspec.dev/problems/conflict"
+                }
+              },
+              "rateLimit": {
+                "description": "Rate limit has been exceeded for the request window.",
+                "summary": "Rate limit error",
+                "value": {
+                  "detail": "Too many requests. Please retry after 30 seconds.",
+                  "instance": "/v1/reference-runs",
+                  "requestId": "request_00000000-0000-4000-8000-000000000004",
+                  "retryAfterSeconds": 30,
+                  "status": 429,
+                  "title": "Too Many Requests",
+                  "type": "https://rampspec.dev/problems/rate-limit-exceeded"
+                }
+              },
+              "validation": {
+                "description": "Input failed schema or semantic validation.",
+                "summary": "Validation error",
+                "value": {
+                  "detail": "Request payload failed validation schema.",
+                  "instance": "/v1/projects",
+                  "requestId": "request_00000000-0000-4000-8000-000000000001",
+                  "status": 400,
+                  "title": "Validation Error",
+                  "type": "https://rampspec.dev/problems/invalid-request"
+                }
+              }
+            },
             "schema": {
               "$ref": "#/components/schemas/Problem"
             }

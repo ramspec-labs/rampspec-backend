@@ -72,6 +72,37 @@ describe("OpenAPI contract", () => {
     expect(openApiDocument.components.responses.Problem.content).toHaveProperty(
       "application/problem+json",
     );
+    const problemContent =
+      openApiDocument.components.responses.Problem.content[
+        "application/problem+json"
+      ];
+    expect(problemContent).toHaveProperty("examples");
+    expect(problemContent.examples).toHaveProperty("validation");
+    expect(problemContent.examples).toHaveProperty("authorization");
+    expect(problemContent.examples).toHaveProperty("conflict");
+    expect(problemContent.examples).toHaveProperty("rateLimit");
+
+    const problemSchema = openApiDocument.components.schemas.Problem;
+    const requiredFields = problemSchema.required as readonly string[];
+    for (const [key, example] of Object.entries(problemContent.examples)) {
+      const val = (example as { value: Record<string, unknown> }).value;
+      for (const req of requiredFields) {
+        expect(val, `Example ${key} missing required field ${req}`).toHaveProperty(
+          req,
+        );
+      }
+      expect(typeof val.status).toBe("number");
+      expect(val.status).toBeGreaterThanOrEqual(400);
+      expect(val.status).toBeLessThanOrEqual(599);
+      expect(typeof val.title).toBe("string");
+      expect(typeof val.type).toBe("string");
+      if (val.requestId !== undefined) {
+        expect(val.requestId).toMatch(
+          new RegExp(openApiDocument.components.schemas.RequestId.pattern),
+        );
+      }
+    }
+
     expect(openApiDocument.components.schemas.UtcTimestamp.pattern).toMatch(
       /Z\$$/u,
     );
