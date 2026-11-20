@@ -118,6 +118,53 @@ export function planMigrations(
   return migrations.filter(({ version }) => !appliedVersions.has(version));
 }
 
+export interface PendingMigrationSummary {
+  readonly checksum: string;
+  readonly name: string;
+  readonly transaction: TransactionMode;
+  readonly version: number;
+}
+
+export interface MigrationDryRunResult {
+  readonly appliedCount: number;
+  readonly pending: readonly PendingMigrationSummary[];
+  readonly pendingCount: number;
+}
+
+export function dryRunMigrations(
+  migrations: readonly Migration[],
+  applied: readonly AppliedMigration[],
+): MigrationDryRunResult {
+  const pending = planMigrations(migrations, applied);
+  const pendingSummaries: PendingMigrationSummary[] = pending.map(
+    ({ checksum, name, transaction, version }) => ({
+      checksum,
+      name,
+      transaction,
+      version,
+    }),
+  );
+  return {
+    appliedCount: applied.length,
+    pending: pendingSummaries,
+    pendingCount: pendingSummaries.length,
+  };
+}
+
+export function formatMigrationDryRun(result: MigrationDryRunResult): string {
+  if (result.pendingCount === 0) {
+    return `No pending migrations. (${result.appliedCount} applied)`;
+  }
+  const lines = [
+    `Pending migrations (${result.pendingCount} pending, ${result.appliedCount} applied):`,
+    ...result.pending.map(
+      (m) =>
+        `  - ${m.version.toString().padStart(4, "0")}_${m.name} [transaction: ${m.transaction}] (checksum: ${m.checksum})`,
+    ),
+  ];
+  return lines.join("\n");
+}
+
 export function planRollback(
   migrations: readonly Migration[],
   applied: readonly AppliedMigration[],

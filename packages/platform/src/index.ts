@@ -37,6 +37,7 @@ export * from "./security/redaction.js";
 export * from "./secrets/providers.js";
 export * from "./observability/tracing.js";
 export * from "./observability/metrics.js";
+export * from "./observability/filter.js";
 export * from "./operations/health.js";
 export * from "./operations/backup.js";
 export * from "./operations/retention.js";

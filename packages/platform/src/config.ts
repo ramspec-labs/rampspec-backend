@@ -269,6 +269,65 @@ function validateProduction(config: RuntimeConfig): void {
   }
 }
 
+export type ConfigProvenanceSource = "default" | "environment" | "file";
+
+export interface ConfigProvenanceEntry {
+  readonly isSecret: boolean;
+  readonly key: string;
+  readonly source: ConfigProvenanceSource;
+  readonly value?: string;
+}
+
+export type ConfigProvenance = Readonly<Record<string, ConfigProvenanceEntry>>;
+
+const secretOrPrivateKeys = new Set([
+  "DATABASE_URL",
+  "GITHUB_PRIVATE_KEY_REF",
+  "KMS_KEY_ID",
+  "OIDC_CLIENT_ID",
+  "OIDC_CLIENT_SECRET_REF",
+  "REDIS_URL",
+  "OBJECT_STORAGE_ENDPOINT",
+  "CONTROL_PLANE_URL",
+  "RUNNER_CONTROL_PLANE_URL",
+  "STELLAR_RPC_URL",
+  "STELLAR_HORIZON_URL",
+  "TEMPORAL_ADDRESS",
+]);
+
+export function getConfigurationProvenance(
+  application: ApplicationName,
+  environment: NodeJS.ProcessEnv = process.env,
+  sources: Readonly<Record<string, ConfigProvenanceSource>> = {},
+): ConfigProvenance {
+  const config = loadConfig(application, environment);
+  const recognizedKeys = Object.keys(configSchema.shape);
+  const provenance: Record<string, ConfigProvenanceEntry> = {};
+
+  for (const key of recognizedKeys) {
+    const rawValue = (config as Record<string, unknown>)[key];
+    if (rawValue === undefined) continue;
+
+    const isSecret = secretOrPrivateKeys.has(key);
+    const source = sources[key] ?? (environment[key] !== undefined ? "environment" : "default");
+    const formattedValue =
+      typeof rawValue === "string" ||
+      typeof rawValue === "number" ||
+      typeof rawValue === "boolean"
+        ? String(rawValue)
+        : JSON.stringify(rawValue);
+
+    provenance[key] = {
+      isSecret,
+      key,
+      source,
+      ...(isSecret ? {} : { value: formattedValue }),
+    };
+  }
+
+  return Object.freeze(provenance);
+}
+
 export function loadConfig(
   application: ApplicationName,
   environment: NodeJS.ProcessEnv = process.env,

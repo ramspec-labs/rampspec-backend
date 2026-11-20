@@ -154,4 +154,91 @@ describe("reference run API", () => {
       detail: "Target origin is not approved for reference runs.",
     });
   });
+
+  it("serves liveness at /health and dependency readiness at /ready", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "rampspec-api-"));
+    directories.push(directory);
+    const started = await startApiServer({
+      dataFile: join(directory, "runs.json"),
+      port: 0,
+      readinessChecks: [
+        { check: () => Promise.resolve(true), name: "database" },
+        { check: () => Promise.resolve(true), name: "objectStore" },
+        { check: () => Promise.resolve(true), name: "scheduler" },
+        { check: () => Promise.resolve(true), name: "signing" },
+      ],
+    });
+    servers.push(started.server);
+
+    const healthRes = await fetch(`${started.url}/health`);
+    expect(healthRes.status).toBe(200);
+    expect(await healthRes.json()).toMatchObject({ status: "ok" });
+
+    const readyRes = await fetch(`${started.url}/ready`);
+    expect(readyRes.status).toBe(200);
+    const readyBody = (await readyRes.json()) as {
+      checks: Record<string, boolean>;
+      components: Record<string, { ready: boolean; status: string }>;
+      status: string;
+    };
+    expect(readyBody.status).toBe("ready");
+    expect(readyBody.components.database?.ready).toBe(true);
+    expect(readyBody.components.objectStore?.ready).toBe(true);
+    expect(readyBody.components.scheduler?.ready).toBe(true);
+    expect(readyBody.components.signing?.ready).toBe(true);
+  });
+
+  it("returns 503 from /ready when a component is unavailable", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "rampspec-api-"));
+    directories.push(directory);
+    const started = await startApiServer({
+      dataFile: join(directory, "runs.json"),
+      port: 0,
+      readinessChecks: [
+        { check: () => Promise.resolve(true), name: "database" },
+        { check: () => Promise.reject(new Error("s3-failure")), name: "objectStore" },
+        { check: () => Promise.resolve(true), name: "scheduler" },
+        { check: () => Promise.resolve(true), name: "signing" },
+      ],
+    });
+    servers.push(started.server);
+
+    const readyRes = await fetch(`${started.url}/ready`);
+    expect(readyRes.status).toBe(503);
+    const body = (await readyRes.json()) as { status: string; components: Record<string, { ready: boolean }> };
+    expect(body.status).toBe("not_ready");
+    expect(body.components.objectStore?.ready).toBe(false);
+  });
+
+  it("emits privacy-safe structured request logs without sensitive fields", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "rampspec-api-"));
+    directories.push(directory);
+    const logs: unknown[] = [];
+    const started = await startApiServer({
+      dataFile: join(directory, "runs.json"),
+      onLog: (entry) => logs.push(entry),
+      port: 0,
+    });
+    servers.push(started.server);
+
+    const healthRes = await fetch(`${started.url}/health`);
+    expect(healthRes.status).toBe(200);
+
+    // Wait for finish event to trigger log callback
+    await new Promise((r) => setTimeout(r, 50));
+    expect(logs.length).toBeGreaterThanOrEqual(1);
+    const firstLog = logs[0] as Record<string, unknown>;
+    expect(firstLog).toMatchObject({
+      actorClass: "anonymous",
+      method: "GET",
+      routeTemplate: "/health",
+      status: 200,
+    });
+    expect(typeof firstLog.durationMs).toBe("number");
+    expect(typeof firstLog.correlationId).toBe("string");
+    expect(firstLog).not.toHaveProperty("body");
+    expect(firstLog).not.toHaveProperty("headers");
+    expect(firstLog).not.toHaveProperty("token");
+    expect(firstLog).not.toHaveProperty("targetOrigin");
+  });
 });

@@ -648,6 +648,64 @@ export const openApiDocument = {
         tags: ["System"],
       },
     },
+    "/ready": {
+      get: {
+        operationId: "getReadiness",
+        responses: {
+          "200": jsonResponse("Service readiness.", {
+            additionalProperties: false,
+            properties: {
+              checks: {
+                additionalProperties: { type: "boolean" },
+                type: "object",
+              },
+              components: {
+                additionalProperties: {
+                  additionalProperties: false,
+                  properties: {
+                    ready: { type: "boolean" },
+                    status: { enum: ["ready", "not_ready"], type: "string" },
+                  },
+                  required: ["ready", "status"],
+                  type: "object",
+                },
+                type: "object",
+              },
+              status: { enum: ["ready", "not_ready"], type: "string" },
+            },
+            required: ["checks", "components", "status"],
+            type: "object",
+          }),
+          "503": jsonResponse("Service unready.", {
+            additionalProperties: false,
+            properties: {
+              checks: {
+                additionalProperties: { type: "boolean" },
+                type: "object",
+              },
+              components: {
+                additionalProperties: {
+                  additionalProperties: false,
+                  properties: {
+                    ready: { type: "boolean" },
+                    status: { enum: ["ready", "not_ready"], type: "string" },
+                  },
+                  required: ["ready", "status"],
+                  type: "object",
+                },
+                type: "object",
+              },
+              status: { enum: ["ready", "not_ready"], type: "string" },
+            },
+            required: ["checks", "components", "status"],
+            type: "object",
+          }),
+        },
+        security: [],
+        summary: "Read dependency readiness",
+        tags: ["System"],
+      },
+    },
     "/version": {
       get: {
         operationId: "getVersion",

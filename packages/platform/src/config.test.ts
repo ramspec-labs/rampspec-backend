@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   applicationNames,
+  getConfigurationProvenance,
   knownNetworkPassphrases,
   loadConfig,
 } from "./config.js";
@@ -112,5 +113,42 @@ describe("application configuration", () => {
     environment.KMS_PROVIDER = "vault";
     environment.OBJECT_STORAGE_ENDPOINT = "http://objects.example.test";
     expect(() => loadConfig("api", environment)).toThrow("must use HTTPS");
+  });
+
+  it("exposes configuration provenance while redacting secrets and private endpoints", () => {
+    const env = validEnvironment("api");
+    const provenance = getConfigurationProvenance("api", env);
+
+    // Provenance tracks key and source
+    expect(provenance.APP_NAME).toEqual({
+      isSecret: false,
+      key: "APP_NAME",
+      source: "environment",
+      value: "api",
+    });
+    expect(provenance.APP_ENV).toEqual({
+      isSecret: false,
+      key: "APP_ENV",
+      source: "environment",
+      value: "test",
+    });
+
+    // Secret and private endpoint values are redacted/omitted
+    expect(provenance.DATABASE_URL?.isSecret).toBe(true);
+    expect(provenance.DATABASE_URL?.value).toBeUndefined();
+
+    expect(provenance.GITHUB_PRIVATE_KEY_REF?.isSecret).toBe(true);
+    expect(provenance.GITHUB_PRIVATE_KEY_REF?.value).toBeUndefined();
+
+    expect(provenance.OIDC_CLIENT_SECRET_REF?.isSecret).toBe(true);
+    expect(provenance.OIDC_CLIENT_SECRET_REF?.value).toBeUndefined();
+
+    expect(provenance.CONTROL_PLANE_URL?.isSecret).toBe(true);
+    expect(provenance.CONTROL_PLANE_URL?.value).toBeUndefined();
+
+    const serialized = JSON.stringify(provenance);
+    expect(serialized).not.toContain("vault://github/private-key");
+    expect(serialized).not.toContain("vault://oidc/client-secret");
+    expect(serialized).not.toContain("database.example.test");
   });
 });

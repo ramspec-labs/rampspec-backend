@@ -5,6 +5,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  dryRunMigrations,
+  formatMigrationDryRun,
   loadMigrations,
   loadSeeds,
   planMigrations,
@@ -62,6 +64,66 @@ describe("migration planning", () => {
     expect(() =>
       planRollback([irreversible], [migration], 0, "development"),
     ).toThrow("no explicit rollback");
+  });
+
+  it("produces deterministic dry-run summaries for pending and applied states", () => {
+    const secondMigration: Migration = {
+      checksum: "b".repeat(64),
+      name: "second",
+      transaction: "forbidden",
+      upSql: "ALTER TABLE example ADD COLUMN extra text;",
+      version: 2,
+    };
+    const all = [migration, secondMigration];
+    const initialDryRun = dryRunMigrations(all, []);
+    expect(initialDryRun).toEqual({
+      appliedCount: 0,
+      pending: [
+        {
+          checksum: migration.checksum,
+          name: migration.name,
+          transaction: "required",
+          version: 1,
+        },
+        {
+          checksum: secondMigration.checksum,
+          name: secondMigration.name,
+          transaction: "forbidden",
+          version: 2,
+        },
+      ],
+      pendingCount: 2,
+    });
+
+    const formattedInitial = formatMigrationDryRun(initialDryRun);
+    expect(formattedInitial).toContain("Pending migrations (2 pending, 0 applied):");
+    expect(formattedInitial).toContain("0001_example [transaction: required]");
+    expect(formattedInitial).toContain("0002_second [transaction: forbidden]");
+
+    const partialApplied: AppliedMigration[] = [
+      {
+        checksum: migration.checksum,
+        name: migration.name,
+        version: migration.version,
+      },
+    ];
+    const partialDryRun = dryRunMigrations(all, partialApplied);
+    expect(partialDryRun.pendingCount).toBe(1);
+    expect(partialDryRun.appliedCount).toBe(1);
+    expect(partialDryRun.pending[0]?.name).toBe("second");
+
+    const allApplied: AppliedMigration[] = [
+      ...partialApplied,
+      {
+        checksum: secondMigration.checksum,
+        name: secondMigration.name,
+        version: secondMigration.version,
+      },
+    ];
+    const upToDateDryRun = dryRunMigrations(all, allApplied);
+    expect(upToDateDryRun.pendingCount).toBe(0);
+    expect(upToDateDryRun.appliedCount).toBe(2);
+    expect(formatMigrationDryRun(upToDateDryRun)).toBe("No pending migrations. (2 applied)");
   });
 });
 

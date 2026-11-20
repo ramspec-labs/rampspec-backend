@@ -7,7 +7,7 @@ import { openApiDocument } from "./openapi.js";
 
 const httpMethods = ["get", "post", "put", "patch", "delete"] as const;
 const mutationMethods = new Set(["post", "put", "patch", "delete"]);
-const publicPaths = new Set(["/health", "/version"]);
+const publicPaths = new Set(["/health", "/ready", "/version"]);
 
 describe("OpenAPI contract", () => {
   it("is a valid OpenAPI 3.1 document", async () => {
