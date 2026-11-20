@@ -5,7 +5,78 @@ import { Pool, type PoolClient, type QueryResultRow } from "pg";
 import type { AppliedMigration, Migration } from "./migrations.js";
 import { planMigrations, planRollback } from "./migrations.js";
 
-class Connection {
+/** PostgreSQL serialization failure code: 40001 (serialization_failure) and 40P01 (deadlock_detected) */
+export const RETRYABLE_SQL_STATES = new Set(["40001", "40P01"]);
+
+export interface SerializationRetryOptions {
+  /** Maximum number of retry attempts. Default: 3 */
+  readonly maxRetries?: number;
+  /** Base backoff delay in ms. Default: 50 */
+  readonly baseDelayMs?: number;
+  /** Maximum backoff delay in ms. Default: 1000 */
+  readonly maxDelayMs?: number;
+  /** Jitter ratio (0 to 1). Default: 0.2 */
+  readonly jitterRatio?: number;
+  /** Optional tracer callback without logging raw query values or secrets */
+  readonly onRetry?: (attempt: number, sqlState: string, delayMs: number) => void;
+  /** Optional sleep implementation for deterministic unit testing */
+  readonly sleep?: (ms: number) => Promise<void>;
+  /** Optional random float generator (0 <= r < 1) for deterministic unit testing */
+  readonly random?: () => number;
+}
+
+export function isRetryableSerializationError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { readonly code?: unknown; readonly routine?: unknown };
+  if (typeof candidate.code === "string" && RETRYABLE_SQL_STATES.has(candidate.code)) {
+    return true;
+  }
+  return false;
+}
+
+export function calculateBackoff(
+  attempt: number,
+  baseDelayMs: number,
+  maxDelayMs: number,
+  jitterRatio: number,
+  random: () => number,
+): number {
+  const exponential = Math.min(maxDelayMs, baseDelayMs * Math.pow(2, attempt));
+  const jitterRange = exponential * jitterRatio;
+  const jitter = (random() * 2 - 1) * jitterRange;
+  return Math.max(0, Math.round(exponential + jitter));
+}
+
+export async function executeWithSerializationRetry<Result>(
+  operation: (attempt: number) => Promise<Result>,
+  options: SerializationRetryOptions = {},
+): Promise<Result> {
+  const maxRetries = options.maxRetries ?? 3;
+  const baseDelayMs = options.baseDelayMs ?? 50;
+  const maxDelayMs = options.maxDelayMs ?? 1000;
+  const jitterRatio = Math.min(1, Math.max(0, options.jitterRatio ?? 0.2));
+  const sleep = options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+  const random = options.random ?? (() => Math.random());
+
+  let attempt = 0;
+  while (true) {
+    try {
+      return await operation(attempt);
+    } catch (error) {
+      if (attempt < maxRetries && isRetryableSerializationError(error)) {
+        const sqlState = (error as { readonly code: string }).code;
+        const delayMs = calculateBackoff(attempt, baseDelayMs, maxDelayMs, jitterRatio, random);
+        options.onRetry?.(attempt + 1, sqlState, delayMs);
+        await sleep(delayMs);
+        attempt++;
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
+export class Connection {
   constructor(private readonly client: PoolClient) {}
 
   async query<Row extends QueryResultRow>(
@@ -22,16 +93,19 @@ class Connection {
 
   async transaction<Result>(
     work: (connection: Connection) => Promise<Result>,
+    options?: SerializationRetryOptions,
   ): Promise<Result> {
-    await this.client.query("BEGIN");
-    try {
-      const result = await work(this);
-      await this.client.query("COMMIT");
-      return result;
-    } catch (error) {
-      await this.client.query("ROLLBACK");
-      throw error;
-    }
+    return executeWithSerializationRetry(async () => {
+      await this.client.query("BEGIN");
+      try {
+        const result = await work(this);
+        await this.client.query("COMMIT");
+        return result;
+      } catch (error) {
+        await this.client.query("ROLLBACK");
+        throw error;
+      }
+    }, options);
   }
 }
 
