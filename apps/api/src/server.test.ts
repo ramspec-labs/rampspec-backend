@@ -154,4 +154,70 @@ describe("reference run API", () => {
       detail: "Target origin is not approved for reference runs.",
     });
   });
+
+  it("rejects oversized request bodies with 413 and problem details", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "rampspec-api-"));
+    directories.push(directory);
+    const started = await startApiServer({
+      dataFile: join(directory, "runs.json"),
+      port: 0,
+    });
+    servers.push(started.server);
+
+    // Test with declared Content-Length exceeding runs budget (32KB)
+    const oversizedPayload = JSON.stringify({
+      data: "x".repeat(35_000),
+      projectId: ids.project,
+      suiteId: ids.suite,
+      suiteVersion: "1.0.0",
+      targetId: ids.target,
+      targetOrigin: "https://anchor.example",
+    });
+    const declaredTooLarge = await fetch(`${started.url}/v1/reference-runs`, {
+      body: oversizedPayload,
+      headers: {
+        "Content-Type": "application/json",
+        "Idempotency-Key": "reviewer-reference-run-oversized-1",
+        "X-RampSpec-Organization": ids.organization,
+      },
+      method: "POST",
+    });
+    expect(declaredTooLarge.status).toBe(413);
+    const problem = (await declaredTooLarge.json()) as {
+      status: number;
+      title: string;
+      type: string;
+    };
+    expect(problem.status).toBe(413);
+    expect(problem.title).toBe("Payload Too Large");
+    expect(problem.type).toBe("https://rampspec.dev/problems/payload-too-large");
+  });
+
+  it("drains in-flight requests during graceful shutdown and rejects new connections", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "rampspec-api-"));
+    directories.push(directory);
+    const started = await startApiServer({
+      dataFile: join(directory, "runs.json"),
+      port: 0,
+    });
+    servers.push(started.server);
+
+    expect(started.shutdownManager.draining).toBe(false);
+    expect(started.shutdownManager.inFlight).toBe(0);
+
+    // Verify health endpoint before shutdown
+    const healthBefore = await fetch(`${started.url}/health`);
+    expect(healthBefore.status).toBe(200);
+
+    // Initiate shutdown
+    const shutdownPromise = started.shutdownManager.shutdown({ deadlineMs: 2000 });
+    expect(started.shutdownManager.draining).toBe(true);
+
+    // Wait for shutdown to complete
+    await shutdownPromise;
+    expect(started.shutdownManager.inFlight).toBe(0);
+
+    // Subsequent requests to the server after closing should fail connection
+    await expect(fetch(`${started.url}/health`)).rejects.toThrow();
+  });
 });

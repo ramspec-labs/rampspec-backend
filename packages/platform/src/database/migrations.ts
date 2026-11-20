@@ -91,10 +91,10 @@ function assertUniqueVersions(
   }
 }
 
-export function planMigrations(
+export function verifyMigrationChecksums(
   migrations: readonly Migration[],
   applied: readonly AppliedMigration[],
-): readonly Migration[] {
+): void {
   const local = new Map(
     migrations.map((migration) => [migration.version, migration]),
   );
@@ -110,10 +110,17 @@ export function planMigrations(
       migration.checksum !== record.checksum
     ) {
       throw new Error(
-        `Checksum drift detected for migration ${record.version}.`,
+        `Checksum drift detected for migration ${record.version}: applied checksum ${record.checksum} does not match release checksum ${migration.checksum}.`,
       );
     }
   }
+}
+
+export function planMigrations(
+  migrations: readonly Migration[],
+  applied: readonly AppliedMigration[],
+): readonly Migration[] {
+  verifyMigrationChecksums(migrations, applied);
   const appliedVersions = new Set(applied.map(({ version }) => version));
   return migrations.filter(({ version }) => !appliedVersions.has(version));
 }

@@ -9,6 +9,7 @@ import {
   loadSeeds,
   planMigrations,
   planRollback,
+  verifyMigrationChecksums,
   type AppliedMigration,
   type Migration,
 } from "./migrations.js";
@@ -40,7 +41,13 @@ describe("migration planning", () => {
     expect(() =>
       planMigrations([migration], [{ ...migration, checksum: "b".repeat(64) }]),
     ).toThrow("Checksum drift");
+    expect(() =>
+      verifyMigrationChecksums([migration], [{ ...migration, checksum: "b".repeat(64) }]),
+    ).toThrow("Checksum drift");
     expect(() => planMigrations([], [migration])).toThrow(
+      "absent from this release",
+    );
+    expect(() => verifyMigrationChecksums([], [migration])).toThrow(
       "absent from this release",
     );
   });
